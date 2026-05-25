@@ -1,0 +1,87 @@
+main{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    height: calc(100vh - 70px);
+}
+
+.outer-container{
+    display: flex;
+    flex-direction: column;
+    color: #bcbcbc;
+    padding: 50px;
+    background-color: #080A0F;
+    margin-top: -200px;
+}
+
+.inner-container{
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group{
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group > label{
+    margin-top: 15px;
+}
+
+.form-group > input{
+    padding: 6px 15px;
+    font-size: 15px;
+    width: 250px;
+    border: 2px transparent;
+
+    background-color: #1f1f1f;
+    outline: none;
+    color: #bcbcbc;
+    font-weight: 800;
+    font-family: 'Cinzel', serif;
+}
+
+button[type="submit"]{
+    font-size: 16px;
+    margin-top: 20px;
+    padding: 8px 20px;
+    background-color: #ff9a00;
+    color: #f3f3f3;
+    font-weight: 600;
+    font-family: 'Cinzel', serif;
+    transition: 0.2s;
+}
+
+
+button[type="submit"]:hover{
+    cursor: pointer;
+    background-color: gold;
+    color: #000000;
+}
+
+button:disabled {
+    background-color: #cccccc; /* Szary kolor dla wyłączonego stanu */
+    color: #666666;           /* Ciemniejszy tekst */
+    cursor: not-allowed;      /* Ikona kursora informująca o blokadzie */
+    border: 1px solid #999999;
+}
+
+.inner-container > p{
+    margin-top: 20px;
+    color: #bcbcbc;
+    font-size: 14px;
+
+}
+
+.inner-container > p > a{
+    color: #ff9a00;
+}
+
+
+.error{
+    color: red;
+    max-width:300px;
+
+}
+

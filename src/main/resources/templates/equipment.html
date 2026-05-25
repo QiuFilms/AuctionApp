@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/root.css}">
+    <link rel="stylesheet" th:href="@{/css/header.css}">
+    <link rel="stylesheet" th:href="@{/css/menu.css}">
+    <link rel="stylesheet" th:href="@{/css/auctions.css}">
+    <script th:src="@{/js/functionsWebSockets.js}"></script>
+    <title>Main</title>
+
+    <script>
+        function sprzedajPrzedmiot(itemId) {
+            const price = document.getElementById('price-' + itemId).value;
+            const hours = document.getElementById('hours-' + itemId).value;
+
+            fetch('/api/auctions/sell', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemId: itemId, price: price, hours: hours })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Przedmiot wystawiony!");
+                    location.reload(); // Możesz odświeżyć tylko listę, jeśli chcesz
+                } else {
+                    alert("Błąd przy wystawianiu.");
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div th:insert="~{fragments/header :: header}"></div>
+    <main>
+        <div th:insert="~{fragments/menu :: menu}" class="eq-insert"></div>
+        <div class="content">
+            <div class="filters">
+
+                <select name="rarity" id="rarity">
+                    <option value="all">All</option>
+                    <option value="common">Common</option>
+                    <option value="uncommon">Uncommon</option>
+                    <option value="rare">Rare</option>
+                    <option value="epic">Epic</option>
+                    <option value="legendary">Legendary</option>
+                </select>
+
+                <select name="item-type" id="item-type">
+                    <option value="all">All</option>
+                    <option value="sword">⚔️ Sword</option>
+                    <option value="armor">🧥 Armor</option>
+                    <option value="shield">🛡️ Shield</option>
+                    <option value="potion">🧪 Potion</option>
+                    <option value="spell">✨ Spell</option>
+                </select>
+            </div>
+
+            <!-- Wyświetlanie liczby przedmiotów -->
+            <p class="auctions-count">Showing <span th:text="${itemsCount}">0</span> items</p>
+
+            <div class="offers">
+
+                <div class="offer" th:each="item : ${items}" th:attr="type=${item.item.rarity.toLowerCase()}">
+                    <div class="info">
+                        <div class="rarity" th:text="${item.item.rarity}" th:attr="type=${item.item.rarity.toLowerCase()}">Rarity</div>
+
+                        <!-- Dynamiczny wybór ikony na podstawie typu -->
+                        <div th:switch="${item.item.type != null ? item.item.type.toLowerCase() : 'default'}">
+                            <img th:case="'armor'" th:src="@{/images/abdominal-armor.svg}" width="100" height="100" />
+                            <img th:case="'sword'" th:src="@{/images/bowie-knife.svg}" width="100" height="100" />
+                            <img th:case="'shield'" th:src="@{/images/checked-shield.svg}" width="100" height="100" />
+                            <img th:case="'potion'" th:src="@{/images/round-potion.svg}" width="100" height="100" />
+                            <img th:case="'accessory'" th:src="@{/images/gold-shell.svg}" width="100" height="100" />
+                            <img th:case="*" th:src="@{/images/default.svg}" width="100" height="100" />
+                        </div>
+                    </div>
+
+                    <div class="details">
+                        <div>
+                            <p class="item-name" th:text="${item.item.name}">Item Name</p>
+                        </div>
+                    </div>
+
+                    <form th:if="${!item.onAuction}" th:action="@{/sell}" method="post" class="offerButtons">
+                        <input type="hidden" name="itemId" th:value="${item.item.id}">
+                        <input type="number" name="price" placeholder="Price" required>
+
+                        <label>Czas: <span th:id="'val-' + ${item.item.id}">12</span> h</label>
+                        <input type="range" name="hours" min="1" max="24" value="12"
+                               th:oninput="'document.getElementById(\'val-' + ${item.item.id} + '\').textContent = this.value'">
+
+                        <button type="submit" class="bid">Sell item</button>
+                    </form>
+
+                    <!-- Napis widoczny tylko, gdy przedmiot JEST na aukcji -->
+                    <div th:if="${item.onAuction}" class="offerButtons on-auction-info">
+                        <p class="being-sold-label">⚔️ Item is being sold</p>
+
+                        <div class="auction-live-info" th:with="auction=${auctionByItemId[item.item.id]}">
+                            <div class="live-price">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M13.744 17.736a6 6 0 1 1-7.48-7.48"/>
+                                    <path d="M15 6h1v4"/>
+                                    <circle cx="16" cy="8" r="6"/>
+                                </svg>
+                                Current price:
+                                <strong th:id="'eq-price-' + ${item.item.id}"
+                                        th:text="${auction != null} ? ${auction.price} : '?'">
+                                    0
+                                </strong>
+                                gold
+                            </div>
+
+                            <div class="live-timer"
+                                 th:attr="data-end-date=${auction != null} ? ${auction.endDate} : ''"
+                                 th:id="'eq-timer-' + ${item.item.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 6v6l4 2"/>
+                                </svg>
+                                <span class="eq-countdown">--:--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        function updateEquipmentCountdowns() {
+            document.querySelectorAll('.live-timer[data-end-date]').forEach(el => {
+                const endDate = el.getAttribute('data-end-date');
+                if (!endDate) return;
+                const distance = new Date(endDate).getTime() - Date.now();
+                const span = el.querySelector('.eq-countdown');
+                if (distance < 0) {
+                    span.textContent = "EXPIRED";
+                } else {
+                    const h = Math.floor(distance / 3600000);
+                    const m = Math.floor((distance % 3600000) / 60000);
+                    const s = Math.floor((distance % 60000) / 1000);
+                    span.textContent = `${h}h ${m}m ${s}s`;
+                }
+            });
+        }
+
+        setInterval(updateEquipmentCountdowns, 1000);
+        updateEquipmentCountdowns();
+    </script>
+    <footer></footer>
+</body>
+</html>

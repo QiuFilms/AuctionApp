@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/root.css}">
+    <link rel="stylesheet" th:href="@{/css/header.css}">
+    <link rel="stylesheet" th:href="@{/css/menu.css}">
+    <link rel="stylesheet" th:href="@{/css/auctions.css}">
+    <title>Auctions</title>
+</head>
+<body>
+<div th:insert="~{fragments/header :: header}"></div>
+<main>
+    <div th:insert="~{fragments/menu :: menu}" class="ac-insert"></div>
+    <div class="content">
+
+        <div class="filters">
+            <select name="rarity" id="rarity">
+                <option value="all">All</option>
+                <option value="common">Common</option>
+                <option value="uncommon">Uncommon</option>
+                <option value="rare">Rare</option>
+                <option value="epic">Epic</option>
+                <option value="legendary">Legendary</option>
+            </select>
+            <select name="item-type" id="item-type">
+                <option value="all">All</option>
+                <option value="sword">⚔️ Sword</option>
+                <option value="armor">🧥 Armor</option>
+                <option value="shield">🛡️ Shield</option>
+                <option value="potion">🧪 Potion</option>
+                <option value="spell">✨ Spell</option>
+            </select>
+        </div>
+
+        <p class="auctions-count">Showing <span th:text="${auctionsCount}">0</span> auctions</p>
+
+        <div class="offers">
+            <div class="offer"
+                 th:each="auction : ${auctions}"
+                 th:id="'offer-' + ${auction.id}"
+                 th:attr="type=${(auction.item != null) ? auction.item.rarity.toLowerCase() : 'unknown'}">
+
+                <div class="info">
+                    <div class="rarity"
+                         th:text="${(auction.item != null) ? auction.item.rarity : 'No Item'}"
+                         th:attr="type=${(auction.item != null) ? auction.item.rarity.toLowerCase() : 'unknown'}">
+                        Rarity
+                    </div>
+
+                    <div th:switch="${(auction.item != null && auction.item.type != null) ? auction.item.type.toLowerCase() : 'default'}">
+                        <img th:case="'armor'"     th:src="@{/images/abdominal-armor.svg}"  width="100" height="100"/>
+                        <img th:case="'sword'"     th:src="@{/images/bowie-knife.svg}"      width="100" height="100"/>
+                        <img th:case="'shield'"    th:src="@{/images/checked-shield.svg}"   width="100" height="100"/>
+                        <img th:case="'potion'"    th:src="@{/images/round-potion.svg}"     width="100" height="100"/>
+                        <img th:case="'accessory'" th:src="@{/images/gold-shell.svg}"       width="100" height="100"/>
+                        <img th:case="*"           th:src="@{/images/default.svg}"          width="100" height="100"/>
+                    </div>
+
+                    <!--
+                        Serduszko — kliknięcie = subskrypcja WebSocket tej aukcji.
+                        data-auction-id służy JS-owi do wysłania właściwego auctionId.
+                        Klasa 'watched' wizualnie zaznacza aktywną obserwację.
+                    -->
+                    <!-- Tak powinno wyglądać serduszko — data-auction-id i onclick="toggleWatch(this)" -->
+                    <div class="watch"
+                         th:attr="data-auction-id=${auction.id}"
+                         onclick="toggleWatch(this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="details">
+                    <p class="item-name"
+                       th:text="${(auction.item != null) ? auction.item.name : 'Unknown Item'}">
+                        Item Name
+                    </p>
+                </div>
+
+                <div class="price">
+                    Current price:
+                    <span>
+                        <!-- span z id umożliwia aktualizację ceny przez WebSocket bez przeładowania strony -->
+                        <span th:id="'price-' + ${auction.id}" th:text="${auction.price}">0</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             class="lucide lucide-coins">
+                            <path d="M13.744 17.736a6 6 0 1 1-7.48-7.48"/>
+                            <path d="M15 6h1v4"/>
+                            <path d="m6.134 14.768.866-.5 2 3.464"/>
+                            <circle cx="16" cy="8" r="6"/>
+                        </svg>
+                    </span>
+                </div>
+
+                <div class="offerButtons">
+                    <input type="number"
+                           th:id="'bid-' + ${auction.id}"
+                           placeholder="Your offer..."
+                           min="0" step="0.01">
+                    <!-- data-auction-id potrzebne dla placeBid() -->
+                    <div class="bid"  th:attr="data-auction-id=${auction.id}"  onclick="placeBid(this)">
+                        Place Bid
+                    </div>
+                </div>
+
+                <!-- Komunikaty błędów i potwierdzeń dla tej aukcji -->
+                <p class="bid-message" th:id="'msg-' + ${auction.id}" style="display:none;"></p>
+
+                <p class="time-left countdown" th:attr="data-end-date=${auction.endDate}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                         class="lucide lucide-clock">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    <span class="timer">--:--:--</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</main>
+<footer></footer>
+
+<script>
+    // ----------------------------------------------------------------
+    // WebSocket — jeden globalny, obsługuje wszystkie subskrypcje aukcji
+    // ----------------------------------------------------------------
+
+
+    // ----------------------------------------------------------------
+    // Obserwowanie aukcji — kliknięcie w serduszko
+    // ----------------------------------------------------------------
+
+    // Lokalny zbiór obserwowanych aukcji (persystencja tylko w pamięci przeglądarki)
+
+
+
+
+    // ----------------------------------------------------------------
+    // Licytacja — Place Bid
+    // Subskrybuje aukcję automatycznie przy złożeniu oferty
+    // ----------------------------------------------------------------
+
+    function placeBid(bidBtn) {
+        const auctionId = parseInt(bidBtn.getAttribute("data-auction-id"));
+        const input = document.getElementById("bid-" + auctionId);
+        const amount = parseFloat(input.value);
+
+        if (!amount || amount <= 0) {
+            showToast("Błąd", "Podaj poprawną kwotę.", "error");
+            return;
+        }
+
+        window.subscribeToAuction(auctionId);
+
+        fetch(`/auctions/${auctionId}/bid?amount=${amount}`, { method: "POST" })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast("Oferta złożona!", `Twoja oferta: ${parseFloat(data.newPrice).toFixed(2)} gold`, "success");
+                    input.value = "";
+                } else {
+                    showToast("Odrzucono", data.error, "error");
+                }
+            })
+            .catch(() => showToast("Błąd", "Problem z połączeniem.", "error"));
+    }
+
+    // ----------------------------------------------------------------
+    // Helper — wyświetl komunikat pod kartą aukcji
+    // ----------------------------------------------------------------
+
+    function showMessage(auctionId, text, type) {
+        const msgEl = document.getElementById("msg-" + auctionId);
+        if (!msgEl) return;
+        msgEl.textContent = text;
+        msgEl.style.display = "block";
+        msgEl.className = "bid-message " + type; // CSS: .success, .error, .info, .ended
+        clearTimeout(msgEl._timeout);
+        // Komunikaty info/success znikają po 5s; error i ended zostają
+        if (type === "success" || type === "info") {
+            msgEl._timeout = setTimeout(() => { msgEl.style.display = "none"; }, 5000);
+        }
+    }
+
+    function updateCountdowns() {
+            document.querySelectorAll('.time-left').forEach(element => {
+                const endDateStr = element.getAttribute('data-end-date');
+                const endDate = new Date(endDateStr).getTime();
+                const now = new Date().getTime();
+                const distance = endDate - now;
+
+                if (distance < 0) {
+                    element.querySelector('.timer').textContent = "EXPIRED";
+                } else {
+                    const hours = Math.floor(distance / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    element.querySelector('.timer').textContent =
+                        `${hours}h ${minutes}m ${seconds}s`;
+                }
+            });
+        }
+
+        // Uruchom odliczanie co sekundę
+        setInterval(updateCountdowns, 1000);
+        // Pierwsze uruchomienie natychmiastowe
+        updateCountdowns();
+</script>
+</body>
+</html>

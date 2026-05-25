@@ -1,0 +1,280 @@
+main{
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 70px);
+    overflow-y: hidden;
+}
+
+.content{
+    flex: 1;
+    overflow-y: scroll;
+
+}
+
+.content > .filters{
+    display: flex;
+    align-items: center;
+    padding-block: 15px;
+    width: 100%;
+    background-color: #282828;
+}
+
+select {
+  /* Reset default appearance */
+    margin-left: 20px;
+
+  padding: 10px 15px;
+  background-color: #000000;
+
+  border-radius: 8px;
+  font-size: 16px;
+  color: #ced4da;
+  cursor: pointer;
+
+}
+
+option[value="common"] {
+  color: #ced4da;
+  font-weight: bold;
+}
+
+option[value="uncommon"] {
+  color: #1be87b;
+  font-weight: bold;
+}
+option[value="rare"] {
+  color: #3096fc;
+  font-weight: bold;
+
+}
+option[value="epic"] {
+  color: #c527f9;
+  font-weight: bold;
+}
+
+option[value="legendary"] {
+  color: #ff9a00;
+  font-weight: bold;
+}
+
+.auctions-count{
+    margin: auto;
+
+    width: 90%;
+    /* background-color: red;    */
+    padding: 20px;
+    color: #bcbcbc;
+}
+
+.auctions-count > span{
+    color: #FFD230;
+    font-weight: bold;
+}
+
+
+.offers{
+    width: 90%;
+    justify-items: center;
+    margin: auto;
+    
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
+}
+
+.offer{
+    margin-bottom: 50px;
+    border: 4px solid transparent;
+    width: 300px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: rgb(243, 243, 243);
+}
+
+.offer[type="common"]{
+    border-color: #ced4da;
+}
+.offer[type="uncommon"]{
+    border-color: #1be87b;
+}
+.offer[type="rare"]{
+    border-color: #3096fc;
+}
+
+.offer[type="epic"]{
+    border-color: #c527f9;
+}
+
+.offer[type="legendary"]{
+    border-color: orange;
+}
+
+.offer > .info > .rarity{
+    padding: 2px;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.offer > .info > .rarity[type="common"]{
+    background-color: #ced4da;
+}
+
+.offer > .info > .rarity[type="uncommon"]{
+    background-color: #1be87b;
+}
+
+.offer > .info > .rarity[type="rare"]{
+    background-color: #3096fc;
+}
+
+.offer > .info > .rarity[type="epic"]{
+    background-color: #c527f9;
+}
+
+.offer > .info > .rarity[type="legendary"]{
+    background-color: orange;
+}
+
+.offer > .info > .watch{
+    
+    padding: 10px;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.offer > .info > .watch svg{
+    transition: fill 0.5s ease-in-out;
+}
+
+.offer > .info > .watch svg:hover{
+    cursor: pointer;
+    fill: rgb(226, 226, 226);
+}
+
+.offer > .details{
+    /* margin-inline: 5px; */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.offer > .time-left{
+    margin-top: 10px;
+    font-size: 20px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    /* margin-left: auto; */
+}
+
+.offer > .price{
+    margin-top: 10px;
+}
+
+.offer > .price span{
+    color: #FFD230;
+    font-size: 18px;
+}
+
+.offer > .offerButtons{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+
+.offer > .offerButtons  .bid{
+    margin-top: 5px;
+    padding: 6px 14px;
+    background-color: #f3f3f3;
+    color: #000000;
+    transition: 0.2s ;
+}
+
+.offer > .offerButtons  .bid:hover{
+    cursor: pointer;
+    background-color: #b2b2b2;
+    color: #000000;
+}
+
+.offer > .offerButtons  input{
+    padding: 10px;
+    font-size: 15px;
+    border: 2px transparent;
+    width: 150px;
+    background-color: #000000;
+    outline: none;
+    color: #bcbcbc;
+    font-weight: 800;
+    font-family: 'Cinzel', serif;
+}
+
+.offer > .details .item-name{
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.offer > .info > svg{
+    margin-top: 20px;
+}
+
+.offer > .info img{
+    margin-top: 20px;
+}
+
+#forHours{
+    color: #ff9a00;
+}
+
+/* Puste serduszko — domyślnie */
+.watch svg {
+    fill: none;
+    stroke: currentColor;
+    cursor: pointer;
+    transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+/* Wypełnione — obserwowane */
+.watch.watched svg {
+    fill: #e74c3c;
+    stroke: #e74c3c;
+}
+
+.on-auction-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.being-sold-label {
+    color: gold;
+    font-weight: bold;
+    text-align: center;
+}
+
+.auction-live-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.live-price, .live-timer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
