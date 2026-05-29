@@ -1,7 +1,6 @@
 package com.qiu.controllers;
 
 import com.qiu.entities.Auction;
-import com.qiu.entities.Item;
 import com.qiu.entities.ItemUser;
 import com.qiu.entities.User;
 import com.qiu.repositories.ItemRepository;
@@ -11,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+
 
 import java.security.Principal;
 import java.util.List;
@@ -33,7 +32,6 @@ public class EquipmentController {
 
     @GetMapping("/equipment")
     public String showEquipment(
-            @RequestParam(required = false, defaultValue = "all") String type,
             Model model,
             Principal principal) {
 
@@ -43,11 +41,6 @@ public class EquipmentController {
             User user = userOptional.get();
             List<ItemUser> items = user.getItems();
 
-            if (!"all".equals(type)) {
-                items = items.stream()
-                        .filter(item -> type.equalsIgnoreCase(item.getItem().getType()))
-                        .collect(Collectors.toList());
-            }
 
             // Mapa itemId -> Auction dla przedmiotów będących na aukcji
             Map<Long, Auction> auctionByItemId = auctionService.findAll().stream()
@@ -60,7 +53,6 @@ public class EquipmentController {
 
             model.addAttribute("items", items);
             model.addAttribute("itemsCount", items.size());
-            model.addAttribute("selectedType", type);
             model.addAttribute("auctionByItemId", auctionByItemId);
         } else {
             return "redirect:/login";

@@ -27,7 +27,7 @@
             </select>
             <select name="item-type" id="item-type">
                 <option value="all">All</option>
-                <option value="sword">⚔️ Sword</option>
+                <option value="weapon">⚔️ Weapon</option>
                 <option value="armor">🧥 Armor</option>
                 <option value="shield">🛡️ Shield</option>
                 <option value="potion">🧪 Potion</option>
@@ -41,30 +41,25 @@
             <div class="offer"
                  th:each="auction : ${auctions}"
                  th:id="'offer-' + ${auction.id}"
-                 th:attr="type=${(auction.item != null) ? auction.item.rarity.toLowerCase() : 'unknown'}">
+                 th:attr="data-rarity=${(auction.item != null) ? auction.item.rarity.toLowerCase() : 'unknown'},
+              data-type=${(auction.item != null && auction.item.type != null) ? auction.item.type.toLowerCase() : 'unknown'}">
 
                 <div class="info">
                     <div class="rarity"
                          th:text="${(auction.item != null) ? auction.item.rarity : 'No Item'}"
-                         th:attr="type=${(auction.item != null) ? auction.item.rarity.toLowerCase() : 'unknown'}">
+                         th:attr="data-type=${(auction.item != null) ? auction.item.rarity.toLowerCase() : 'unknown'}">
                         Rarity
                     </div>
 
                     <div th:switch="${(auction.item != null && auction.item.type != null) ? auction.item.type.toLowerCase() : 'default'}">
                         <img th:case="'armor'"     th:src="@{/images/abdominal-armor.svg}"  width="100" height="100"/>
-                        <img th:case="'sword'"     th:src="@{/images/bowie-knife.svg}"      width="100" height="100"/>
+                        <img th:case="'weapon'"     th:src="@{/images/bowie-knife.svg}"      width="100" height="100"/>
                         <img th:case="'shield'"    th:src="@{/images/checked-shield.svg}"   width="100" height="100"/>
                         <img th:case="'potion'"    th:src="@{/images/round-potion.svg}"     width="100" height="100"/>
                         <img th:case="'accessory'" th:src="@{/images/gold-shell.svg}"       width="100" height="100"/>
                         <img th:case="*"           th:src="@{/images/default.svg}"          width="100" height="100"/>
                     </div>
 
-                    <!--
-                        Serduszko — kliknięcie = subskrypcja WebSocket tej aukcji.
-                        data-auction-id służy JS-owi do wysłania właściwego auctionId.
-                        Klasa 'watched' wizualnie zaznacza aktywną obserwację.
-                    -->
-                    <!-- Tak powinno wyglądać serduszko — data-auction-id i onclick="toggleWatch(this)" -->
                     <div class="watch"
                          th:attr="data-auction-id=${auction.id}"
                          onclick="toggleWatch(this)">
@@ -83,10 +78,14 @@
                     </p>
                 </div>
 
+                <div class="winning-badge"
+                     th:if="${leadingBidders[auction.id] != null && leadingBidders[auction.id] == #authentication.name}">
+                    ⚔️ <span>Twoja oferta wygrywa!</span>
+                </div>
+
                 <div class="price">
                     Current price:
                     <span>
-                        <!-- span z id umożliwia aktualizację ceny przez WebSocket bez przeładowania strony -->
                         <span th:id="'price-' + ${auction.id}" th:text="${auction.price}">0</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                              viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -105,13 +104,11 @@
                            th:id="'bid-' + ${auction.id}"
                            placeholder="Your offer..."
                            min="0" step="0.01">
-                    <!-- data-auction-id potrzebne dla placeBid() -->
                     <div class="bid"  th:attr="data-auction-id=${auction.id}"  onclick="placeBid(this)">
                         Place Bid
                     </div>
                 </div>
 
-                <!-- Komunikaty błędów i potwierdzeń dla tej aukcji -->
                 <p class="bid-message" th:id="'msg-' + ${auction.id}" style="display:none;"></p>
 
                 <p class="time-left countdown" th:attr="data-end-date=${auction.endDate}">
@@ -128,27 +125,16 @@
         </div>
     </div>
 </main>
-<footer></footer>
+<footer class="actuator-footer">
+    <div class="actuator-info" id="actuator-bar">
+        <span>Status: <b id="health-status">...</b></span>
+        <span>Pamięć: <b id="memory-usage">--</b></span>
+        <span>Java: <b id="java-version">--</b></span>
+    </div>
+</footer>
 
 <script>
-    // ----------------------------------------------------------------
-    // WebSocket — jeden globalny, obsługuje wszystkie subskrypcje aukcji
-    // ----------------------------------------------------------------
 
-
-    // ----------------------------------------------------------------
-    // Obserwowanie aukcji — kliknięcie w serduszko
-    // ----------------------------------------------------------------
-
-    // Lokalny zbiór obserwowanych aukcji (persystencja tylko w pamięci przeglądarki)
-
-
-
-
-    // ----------------------------------------------------------------
-    // Licytacja — Place Bid
-    // Subskrybuje aukcję automatycznie przy złożeniu oferty
-    // ----------------------------------------------------------------
 
     function placeBid(bidBtn) {
         const auctionId = parseInt(bidBtn.getAttribute("data-auction-id"));
@@ -162,12 +148,13 @@
 
         window.subscribeToAuction(auctionId);
 
-        fetch(`/auctions/${auctionId}/bid?amount=${amount}`, { method: "POST" })
+        fetch(contextPath + `/auctions/${auctionId}/bid?amount=${amount}`, { method: "POST" })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
                     showToast("Oferta złożona!", `Twoja oferta: ${parseFloat(data.newPrice).toFixed(2)} gold`, "success");
                     input.value = "";
+                    setWinningBadge(auctionId, true);
                 } else {
                     showToast("Odrzucono", data.error, "error");
                 }
@@ -175,9 +162,20 @@
             .catch(() => showToast("Błąd", "Problem z połączeniem.", "error"));
     }
 
-    // ----------------------------------------------------------------
-    // Helper — wyświetl komunikat pod kartą aukcji
-    // ----------------------------------------------------------------
+    function setWinningBadge(auctionId, isWinning) {
+        const offerEl = document.getElementById("offer-" + auctionId);
+        if (!offerEl) return;
+
+        offerEl.querySelector(".winning-badge")?.remove();
+
+        if (isWinning) {
+            const badge = document.createElement("div");
+            badge.className = "winning-badge";
+            badge.innerHTML = `⚔️ <span>Twoja oferta wygrywa!</span>`;
+            const buttons = offerEl.querySelector(".offerButtons");
+            if (buttons) offerEl.insertBefore(badge, buttons);
+        }
+    }
 
     function showMessage(auctionId, text, type) {
         const msgEl = document.getElementById("msg-" + auctionId);
@@ -186,7 +184,7 @@
         msgEl.style.display = "block";
         msgEl.className = "bid-message " + type; // CSS: .success, .error, .info, .ended
         clearTimeout(msgEl._timeout);
-        // Komunikaty info/success znikają po 5s; error i ended zostają
+
         if (type === "success" || type === "info") {
             msgEl._timeout = setTimeout(() => { msgEl.style.display = "none"; }, 5000);
         }
@@ -212,10 +210,40 @@
             });
         }
 
-        // Uruchom odliczanie co sekundę
         setInterval(updateCountdowns, 1000);
-        // Pierwsze uruchomienie natychmiastowe
         updateCountdowns();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const raritySelect = document.getElementById("rarity");
+            const typeSelect = document.getElementById("item-type");
+            const searchInput = document.getElementById("search");
+
+            function filterItems() {
+                const rarityValue = raritySelect.value.toLowerCase();
+                const typeValue = typeSelect.value.toLowerCase();
+                const searchQuery = searchInput.value.toLowerCase();
+
+                document.querySelectorAll(".offer").forEach(offer => {
+                    const rarity = offer.getAttribute("data-rarity") || "";
+                    const type = offer.getAttribute("data-type") || "";
+                    const name = offer.querySelector(".item-name").textContent.toLowerCase();
+
+                    const matchesRarity = (rarityValue === "all" || rarity === rarityValue);
+                    const matchesType = (typeValue === "all" || type === typeValue);
+                    const matchesName = name.includes(searchQuery);
+
+                    if (matchesRarity && matchesType && matchesName) {
+                        offer.style.display = "flex";
+                    } else {
+                        offer.style.display = "none";
+                    }
+                });
+            }
+
+            raritySelect.addEventListener("change", filterItems);
+            typeSelect.addEventListener("change", filterItems);
+            searchInput.addEventListener("input", filterItems);
+        });
 </script>
 </body>
 </html>

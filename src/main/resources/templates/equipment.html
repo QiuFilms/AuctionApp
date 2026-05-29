@@ -8,29 +8,7 @@
     <link rel="stylesheet" th:href="@{/css/header.css}">
     <link rel="stylesheet" th:href="@{/css/menu.css}">
     <link rel="stylesheet" th:href="@{/css/auctions.css}">
-    <script th:src="@{/js/functionsWebSockets.js}"></script>
     <title>Main</title>
-
-    <script>
-        function sprzedajPrzedmiot(itemId) {
-            const price = document.getElementById('price-' + itemId).value;
-            const hours = document.getElementById('hours-' + itemId).value;
-
-            fetch('/api/auctions/sell', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ itemId: itemId, price: price, hours: hours })
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert("Przedmiot wystawiony!");
-                    location.reload(); // Możesz odświeżyć tylko listę, jeśli chcesz
-                } else {
-                    alert("Błąd przy wystawianiu.");
-                }
-            });
-        }
-    </script>
 </head>
 <body>
     <div th:insert="~{fragments/header :: header}"></div>
@@ -50,27 +28,27 @@
 
                 <select name="item-type" id="item-type">
                     <option value="all">All</option>
-                    <option value="sword">⚔️ Sword</option>
+                    <option value="weapon">⚔️ Weapon</option>
                     <option value="armor">🧥 Armor</option>
                     <option value="shield">🛡️ Shield</option>
                     <option value="potion">🧪 Potion</option>
-                    <option value="spell">✨ Spell</option>
+                    <option value="accessory">✨ Accessory</option>
                 </select>
             </div>
 
-            <!-- Wyświetlanie liczby przedmiotów -->
+
             <p class="auctions-count">Showing <span th:text="${itemsCount}">0</span> items</p>
 
             <div class="offers">
 
-                <div class="offer" th:each="item : ${items}" th:attr="type=${item.item.rarity.toLowerCase()}">
+                <div class="offer" th:each="item : ${items}"   th:attr="data-rarity=${item.item.rarity.toLowerCase()}, data-type=${item.item.type.toLowerCase()}">
                     <div class="info">
-                        <div class="rarity" th:text="${item.item.rarity}" th:attr="type=${item.item.rarity.toLowerCase()}">Rarity</div>
+                        <div class="rarity" th:text="${item.item.rarity}" th:attr="data-type=${item.item.rarity.toLowerCase()}">Rarity</div>
 
-                        <!-- Dynamiczny wybór ikony na podstawie typu -->
+
                         <div th:switch="${item.item.type != null ? item.item.type.toLowerCase() : 'default'}">
                             <img th:case="'armor'" th:src="@{/images/abdominal-armor.svg}" width="100" height="100" />
-                            <img th:case="'sword'" th:src="@{/images/bowie-knife.svg}" width="100" height="100" />
+                            <img th:case="'weapon'" th:src="@{/images/bowie-knife.svg}" width="100" height="100" />
                             <img th:case="'shield'" th:src="@{/images/checked-shield.svg}" width="100" height="100" />
                             <img th:case="'potion'" th:src="@{/images/round-potion.svg}" width="100" height="100" />
                             <img th:case="'accessory'" th:src="@{/images/gold-shell.svg}" width="100" height="100" />
@@ -85,17 +63,19 @@
                     </div>
 
                     <form th:if="${!item.onAuction}" th:action="@{/sell}" method="post" class="offerButtons">
-                        <input type="hidden" name="itemId" th:value="${item.item.id}">
-                        <input type="number" name="price" placeholder="Price" required>
+                        <input type="hidden" name="itemId" th:value="${item.id}">
+
+                        <input type="number" name="price" placeholder="Price" min="0.01" step="0.01" required>
 
                         <label>Czas: <span th:id="'val-' + ${item.item.id}">12</span> h</label>
                         <input type="range" name="hours" min="1" max="24" value="12"
-                               th:oninput="'document.getElementById(\'val-' + ${item.item.id} + '\').textContent = this.value'">
+                               th:oninput="'document.getElementById(\'val-' + ${item.item.id} + '\').innerText = this.value'"
+                        />
 
                         <button type="submit" class="bid">Sell item</button>
                     </form>
 
-                    <!-- Napis widoczny tylko, gdy przedmiot JEST na aukcji -->
+
                     <div th:if="${item.onAuction}" class="offerButtons on-auction-info">
                         <p class="being-sold-label">⚔️ Item is being sold</p>
 
@@ -151,7 +131,49 @@
 
         setInterval(updateEquipmentCountdowns, 1000);
         updateEquipmentCountdowns();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const raritySelect = document.getElementById("rarity");
+            const typeSelect = document.getElementById("item-type");
+            const searchInput = document.getElementById("search");
+
+            function filterItems() {
+                const rarityValue = raritySelect.value.toLowerCase();
+                const typeValue = typeSelect.value.toLowerCase();
+                const searchQuery = searchInput.value.toLowerCase();
+
+                document.querySelectorAll(".offer").forEach(offer => {
+
+                    const rarity = offer.getAttribute("data-rarity") || "";
+                    const type = offer.getAttribute("data-type") || "";
+                    const name = offer.querySelector(".item-name").textContent.toLowerCase();
+
+                    const matchesRarity = (rarityValue === "all" || rarity === rarityValue);
+                    const matchesType = (typeValue === "all" || type === typeValue);
+                    const matchesName = name.includes(searchQuery);
+
+
+                    if (matchesRarity && matchesType && matchesName) {
+                        offer.style.display = "flex";
+                    } else {
+                        offer.style.display = "none";
+                    }
+                });
+            }
+
+
+            raritySelect.addEventListener("change", filterItems);
+            typeSelect.addEventListener("change", filterItems);
+            searchInput.addEventListener("input", filterItems);
+        });
     </script>
-    <footer></footer>
+
+    <footer class="actuator-footer">
+        <div class="actuator-info" id="actuator-bar">
+            <span>Status: <b id="health-status">...</b></span>
+            <span>Pamięć: <b id="memory-usage">--</b></span>
+            <span>Java: <b id="java-version">--</b></span>
+        </div>
+    </footer>
 </body>
 </html>

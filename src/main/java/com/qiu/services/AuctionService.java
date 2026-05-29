@@ -38,23 +38,24 @@ public class AuctionService {
         return auctionRepository.findAll();
     }
 
-    // ----------------------------------------------------------------
-    // Licytacja — odejmij środki, zwróć poprzedniemu licytującemu
-    // ----------------------------------------------------------------
+
 
     @Transactional
     public void placeBid(Long auctionId, float bidAmount, User bidder) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new RuntimeException("Aukcja nie istnieje"));
 
-        // Walidacja — oferta musi być wyższa niż aktualna cena
+        if (bidAmount <= 0) {
+            throw new IllegalArgumentException("Oferta musi być większa niż 0.");
+        }
+
         if (bidAmount <= auction.getPrice()) {
             throw new IllegalArgumentException(
                     "Oferta musi być wyższa niż aktualna cena: " + auction.getPrice()
             );
         }
 
-        // Sprawdź czy licytujący ma wystarczające środki
+
         User freshBidder = userRepository.findById(bidder.getId())
                 .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika"));
         if (freshBidder.getWallet() < bidAmount) {
@@ -63,7 +64,7 @@ public class AuctionService {
             );
         }
 
-        // Znajdź poprzedniego licytującego z historii i zwróć mu środki
+
         auctionHistoryRepository
                 .findByAuctionIdOrderByEventDateDesc(auctionId)
                 .stream()
@@ -71,28 +72,20 @@ public class AuctionService {
                 .findFirst()
                 .ifPresent(lastBid -> {
                     User previousBidder = lastBid.getOwner();
-                    // Odśwież encję żeby mieć aktualny stan portfela
                     User freshPrevious = userRepository.findById(previousBidder.getId())
                             .orElse(null);
                     if (freshPrevious != null) {
                         freshPrevious.setWallet(freshPrevious.getWallet() + auction.getPrice());
                         userRepository.save(freshPrevious);
-                        System.out.println("DEBUG: Zwrócono " + auction.getPrice()
-                                + " dla " + freshPrevious.getUsername());
                     }
                 });
 
-        // Odejmij środki od nowego licytującego
         freshBidder.setWallet(freshBidder.getWallet() - bidAmount);
         userRepository.save(freshBidder);
-        System.out.println("DEBUG: Odjęto " + bidAmount + " od " + freshBidder.getUsername()
-                + " | Pozostało: " + freshBidder.getWallet());
 
-        // Zapisz nową cenę
         auction.setPrice(bidAmount);
         auctionRepository.save(auction);
 
-        // Zapisz zdarzenie BID w historii
         AuctionHistory history = AuctionHistory.builder()
                 .auction(auction)
                 .eventDate(LocalDateTime.now())
@@ -101,13 +94,10 @@ public class AuctionService {
                 .build();
         auctionHistoryRepository.save(history);
 
-        // Powiadom subskrybentów przez WebSocket
         WebSocketEndpointJSON.broadcastBidUpdate(auctionId, bidAmount, freshBidder.getUsername());
     }
 
-    // ----------------------------------------------------------------
-    // Zamknięcie aukcji — przelew do sprzedającego + transfer przedmiotu
-    // ----------------------------------------------------------------
+
 
     @Scheduled(fixedRate = 2000)
     @Transactional
@@ -132,63 +122,57 @@ public class AuctionService {
                 User winner = lastBid.getOwner();
                 winnerUsername = winner.getUsername();
 
-                // Przelej środki (finalną cenę) do sprzedającego
                 if (auction.getSeller() != null) {
                     User seller = userRepository.findById(auction.getSeller().getId())
                             .orElse(null);
                     if (seller != null) {
                         seller.setWallet(seller.getWallet() + auction.getPrice());
                         userRepository.save(seller);
-                        System.out.println("DEBUG: Przelano " + auction.getPrice()
-                                + " do sprzedającego " + seller.getUsername());
                     }
                 }
 
-                // Przenieś przedmiot do ekwipunku zwycięzcy
                 transferItem(auction.getItem().getId(), winner.getId());
 
             } else {
-                // Brak ofert — zwróć przedmiot sprzedającemu (tylko wyczyść flagę)
                 clearAuctionFlag(auction.getItem().getId());
             }
 
-            // Powiadom subskrybentów WS
             WebSocketEndpointJSON.broadcastAuctionEnded(auction.getId(), winnerUsername);
 
             auctionRepository.delete(auction);
         }
     }
 
-    // ----------------------------------------------------------------
-    // Transfer przedmiotu — zmień właściciela w items_user
-    // ----------------------------------------------------------------
+
 
     private void transferItem(Long itemId, Long newOwnerId) {
-        // Używamy UPDATE, aby zmienić user_id dla danego przedmiotu
-        // WHERE item_id = ? zapewnia, że zmieniamy właściciela właściwego przedmiotu
         String sql = "UPDATE items_user SET user_id = ?, on_auction = false WHERE item_id = ?";
 
         int rowsUpdated = jdbcTemplate.update(sql, newOwnerId, itemId);
-
-        if (rowsUpdated > 0) {
-            System.out.println("DEBUG: Przedmiot " + itemId + " przeniesiony do usera " + newOwnerId);
-        } else {
-            System.out.println("DEBUG: Błąd! Nie znaleziono przedmiotu " + itemId + " w tabeli items_user.");
-        }
     }
 
     private void clearAuctionFlag(Long itemId) {
         jdbcTemplate.update("UPDATE items_user SET on_auction = false WHERE item_id = ?", itemId);
     }
 
-    // ----------------------------------------------------------------
-    // Tworzenie aukcji
-    // ----------------------------------------------------------------
+
 
     @Transactional
-    public void createAuctionFromItem(Long itemId, Long userId, double price, int hours) {
-        ItemUser itemUser = itemUserRepository.findByUserIdAndItemId(userId, itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono przedmiotu u użytkownika"));
+    public void createAuctionFromItem(Long uniqueItemId, double price, int hours) {
+        if (price <= 0) {
+            throw new IllegalArgumentException("Cena musi być większa od zera.");
+        }
+
+        if (hours < 1 || hours > 24) {
+            throw new IllegalArgumentException("Czas aukcji musi wynosić od 1 do 24 godzin.");
+        }
+
+        ItemUser itemUser = itemUserRepository.findById(uniqueItemId)
+                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono przedmiotu o ID: " + uniqueItemId));
+
+        if (itemUser.getOnAuction()) {
+            throw new IllegalArgumentException("Ten przedmiot jest już wystawiony na aukcji.");
+        }
 
         itemUser.setOnAuction(true);
         itemUserRepository.save(itemUser);
@@ -210,9 +194,6 @@ public class AuctionService {
         auctionHistoryRepository.save(history);
     }
 
-    // ----------------------------------------------------------------
-    // Obserwowanie aukcji
-    // ----------------------------------------------------------------
 
     @Transactional
     public void saveWatchEvent(Long auctionId, User user, boolean watching) {

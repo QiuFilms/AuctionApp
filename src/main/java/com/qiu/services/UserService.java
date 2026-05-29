@@ -15,10 +15,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @Service
 public class UserService {
+
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -37,11 +38,9 @@ public class UserService {
     @Transactional
     public void registerNewUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("USER");
         user.setWallet(5000.0f);
         user.setCreationDate(LocalDateTime.now());
 
-        // 1. Zapisz użytkownika najpierw, aby uzyskać jego ID
         user = userRepository.save(user);
 
         List<Item> availableItems = itemRepository.findAll();
@@ -52,14 +51,13 @@ public class UserService {
 
             User finalUser = user;
             List<ItemUser> itemUserRelations = startingItems.stream().map(item -> {
-                ItemUser iu = new ItemUser();
-                iu.setUser(finalUser); // Teraz user ma poprawne ID
-                iu.setItem(item);
-                iu.setOnAuction(false);
-                return iu;
-            }).collect(Collectors.toList());
+                ItemUser itemUser = new ItemUser();
+                itemUser.setUser(finalUser);
+                itemUser.setItem(item);
+                itemUser.setOnAuction(false);
+                return itemUser;
+            }).toList();
 
-            // 2. Zapisz relacje po zapisaniu użytkownika
             itemUserRepository.saveAll(itemUserRelations);
         }
     }

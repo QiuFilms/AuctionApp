@@ -19,17 +19,15 @@ public class StatsService {
 
 
     public int getOnlineUsersCount() {
-        // Returns the number of principal objects in the registry
         return sessionRegistry.getAllPrincipals().size();
     }
 
     public void updateAuctionsCount() {
-        long count = countAllAuctions(); // Metoda w serwisie zwracająca liczbę aukcji
-        // Wysyłamy informację o aukcjach
+        long count = countAllAuctions();
         WebSocketEndpointJSON.broadcastAuctions(String.valueOf(count));
     }
 
     public long countAllAuctions() {
-        return auctionRepository.count(); // Zwraca typ long
+        return auctionRepository.count();
     }
 }

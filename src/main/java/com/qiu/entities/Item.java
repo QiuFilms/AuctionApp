@@ -1,7 +1,6 @@
 package com.qiu.entities;
 
 import lombok.*;
-
 import javax.persistence.*;
 
 @Getter
@@ -12,15 +11,12 @@ import javax.persistence.*;
 @Entity
 @Table(name = "items")
 public class Item {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
-
 
     @Column(name = "rarity")
     private String rarity;

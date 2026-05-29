@@ -26,7 +26,6 @@
             <div class="inner-container">
                 <h2>Log in</h2>
                 <form th:action="@{/login}" method="post">
-                    <!-- Token CSRF jest automatycznie dodawany przez Thymeleaf w th:action -->
                     <div class="form-group">
                         <label for="username">Username</label>
                         <input type="text" id="username" name="username" required>

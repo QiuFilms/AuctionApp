@@ -17,16 +17,14 @@ public class ApplicationController implements Serializable {
         return "auctions";
     }
 
-    @GetMapping("/marketplace")
-    public String showMarketplacePage() {
-        return "marketplace";
-    }
-
     @PostMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response) {
-        // Twoja dodatkowa logika...
         return "redirect:/login";
     }
 
+    @GetMapping("/login")
+    public String showLoginPage() {
+        return "login";
+    }
 
 }

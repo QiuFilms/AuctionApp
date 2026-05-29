@@ -23,23 +23,23 @@ public class Auction implements Serializable {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id") // Upewnij się, że taka kolumna istnieje w tabeli auctions
+    @JoinColumn(name = "user_id", nullable = false)
     private User seller;
 
     @ManyToOne
-    @JoinColumn(name = "item_id")
+    @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @Column(name = "time_duration")
+    @Column(name = "time_duration", nullable = false)
     private int timeDuration;
 
-    @Column(name = "creation_date")
+    @Column(name = "creation_date", nullable = false)
     private LocalDateTime creationDate;
 
-    @Column(name = "end_date")
+    @Column(name = "end_date", nullable = false)
     private LocalDateTime endDate;
 
-    @Column(name = "price")
+    @Column(name = "price", nullable = false)
     private float price;
 
 }

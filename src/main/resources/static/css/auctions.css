@@ -94,21 +94,21 @@ option[value="legendary"] {
     color: rgb(243, 243, 243);
 }
 
-.offer[type="common"]{
-    border-color: #ced4da;
+.offer[data-rarity="common"]{
+    border-color: #ced4da !important;
 }
-.offer[type="uncommon"]{
+.offer[data-rarity="uncommon"]{
     border-color: #1be87b;
 }
-.offer[type="rare"]{
+.offer[data-rarity="rare"]{
     border-color: #3096fc;
 }
 
-.offer[type="epic"]{
+.offer[data-rarity="epic"]{
     border-color: #c527f9;
 }
 
-.offer[type="legendary"]{
+.offer[data-rarity="legendary"]{
     border-color: orange;
 }
 
@@ -119,23 +119,23 @@ option[value="legendary"] {
     left: 0;
 }
 
-.offer > .info > .rarity[type="common"]{
+.offer > .info > .rarity[data-type="common"]{
     background-color: #ced4da;
 }
 
-.offer > .info > .rarity[type="uncommon"]{
+.offer > .info > .rarity[data-type="uncommon"]{
     background-color: #1be87b;
 }
 
-.offer > .info > .rarity[type="rare"]{
+.offer > .info > .rarity[data-type="rare"]{
     background-color: #3096fc;
 }
 
-.offer > .info > .rarity[type="epic"]{
+.offer > .info > .rarity[data-type="epic"]{
     background-color: #c527f9;
 }
 
-.offer > .info > .rarity[type="legendary"]{
+.offer > .info > .rarity[data-type="legendary"]{
     background-color: orange;
 }
 
@@ -277,4 +277,64 @@ option[value="legendary"] {
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+
+.actuator-container {
+    padding: 20px;
+    background: #1a1a1a;
+    border-radius: 12px;
+    margin: 20px;
+    border: 1px solid #333;
+}
+
+.actuator-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+
+
+.actuator-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #0a0a0a;
+    border-top: 1px solid #333;
+    padding: 5px 20px;
+    font-size: 12px;
+    color: #888;
+    z-index: 1000;
+}
+
+.actuator-info {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.actuator-info b {
+    color: #bcbcbc;
+}
+
+.winning-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #1a3a1a, #2d6a2d);
+    border: 1px solid #27ae60;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #2ecc71;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+    50%       { box-shadow: 0 0 0 6px rgba(46, 204, 113, 0); }
 }

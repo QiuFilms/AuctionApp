@@ -24,19 +24,18 @@ public class AuctionHistory implements Serializable {
 
 
     @ManyToOne
-    @JoinColumn(name = "auction_id")
+    @JoinColumn(name = "auction_id", nullable = false)
     private Auction auction;
 
 
-    @Column(name = "event_date")
+    @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;
 
-    @Column(name = "event_type")
+    @Column(name = "event_type", nullable = false)
     private String eventType;
 
-
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User owner;
 
 }

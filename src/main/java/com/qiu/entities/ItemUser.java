@@ -12,10 +12,9 @@ public class ItemUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "unique_item_id") // Dopasowane do nazwy w schema.sql
+    @Column(name = "unique_item_id")
     private Long id;
 
-    // Relacje pozostają, ale nie potrzebujemy już @MapsId
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -24,6 +23,6 @@ public class ItemUser {
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @Column(name = "on_auction")
+    @Column(name = "on_auction", nullable = false)
     private Boolean onAuction = false;
 }

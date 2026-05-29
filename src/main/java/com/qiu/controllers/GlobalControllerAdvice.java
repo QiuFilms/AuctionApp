@@ -27,7 +27,6 @@ public class GlobalControllerAdvice {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
             String username = auth.getName();
-            // Pobierz użytkownika z bazy po nazwie z sesji
             return userRepository.findByUsername(username).orElse(null);
         }
         return null;

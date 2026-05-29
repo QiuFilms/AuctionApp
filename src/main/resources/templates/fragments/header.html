@@ -12,26 +12,13 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="grey" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-icon lucide-search"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
                 <input type="search" name="search" id="search" placeholder="Search items...">
             </div>
-<!--            <div class="account">-->
-<!--                <img src="" alt="">-->
-<!--                <div class="info">-->
-<!--                    <div class="username">Testtestest</div>-->
-<!--                    <div class="wallet">-->
-<!--                        120-->
-<!--                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-coins-icon lucide-coins"><path d="M13.744 17.736a6 6 0 1 1-7.48-7.48"/><path d="M15 6h1v4"/><path d="m6.134 14.768.866-.5 2 3.464"/><circle cx="16" cy="8" r="6"/></svg>-->
-<!--                        -->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
 
-            <!-- Fragment Twojego header.html[cite: 11] -->
             <div class="account" th:if="${user != null}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <div class="info">
                     <div class="username" th:text="${user.username}">Nazwa użytkownika</div>
 
                     <div class="wallet">
-                        <!-- Wyświetlenie portfela z bazy[cite: 12] -->
                         <span th:text="${user.wallet}">0</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-coins-icon lucide-coins"><path d="M13.744 17.736a6 6 0 1 1-7.48-7.48"/><path d="M15 6h1v4"/><path d="m6.134 14.768.866-.5 2 3.464"/><circle cx="16" cy="8" r="6"/></svg>
                     </div>
@@ -49,9 +36,6 @@
     </header>
 
     <script>
-        // placeBid korzysta z window.auctionWs i window.subscribeToAuction
-        // zdefiniowanych globalnie w fragments/notifications
-
         function placeBid(bidBtn) {
             const auctionId = parseInt(bidBtn.getAttribute("data-auction-id"));
             const input = document.getElementById("bid-" + auctionId);
@@ -62,7 +46,6 @@
                 return;
             }
 
-            // Licytujący automatycznie subskrybuje aukcję
             window.subscribeToAuction(auctionId);
 
             fetch(`/auctions/${auctionId}/bid?amount=${amount}`, { method: "POST" })
@@ -78,22 +61,6 @@
                 .catch(() => showToast("Błąd", "Problem z połączeniem.", "error"));
         }
 
-        // Countdown — bez zmian
-        function updateCountdowns() {
-            document.querySelectorAll(".time-left").forEach(el => {
-                const distance = new Date(el.getAttribute("data-end-date")).getTime() - Date.now();
-                const timer = el.querySelector(".timer");
-                if (distance < 0) {
-                    timer.textContent = "EXPIRED";
-                } else {
-                    const h = Math.floor(distance / 3600000);
-                    const m = Math.floor((distance % 3600000) / 60000);
-                    const s = Math.floor((distance % 60000) / 1000);
-                    timer.textContent = `${h}h ${m}m ${s}s`;
-                }
-            });
-        }
-        setInterval(updateCountdowns, 1000);
-        updateCountdowns();
+
     </script>
 </html>
