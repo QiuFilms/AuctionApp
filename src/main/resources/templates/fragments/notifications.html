@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
 
 <div th:fragment="notifications">
-
-    <!-- Kontener toastów — fixed, zawsze na wierzchu -->
     <div id="toast-container"></div>
 
     <style>
@@ -107,8 +106,10 @@
         window.watchedAuctions = window.watchedAuctions || new Set();
 
         const path = window.location.pathname.split('/')[1];
-        window.auctionWs = new WebSocket("wss://" + window.location.host + "/" + path + "/websocketEndPointJSON");
+        const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        console.log(wsProtocol + window.location.host + "/" + path + "/websocketEndPointJSON")
 
+        window.auctionWs = new WebSocket(wsProtocol + window.location.host + "/" + path + "/websocketEndPointJSON");
 
         let contextPath = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 1));
         const bidsUrl = contextPath + "/auctions/my-active-bids";
@@ -121,6 +122,7 @@
             try {
                 console.log("Fetching /auctions/my-active-bids...");
                 const res = await fetch(bidsUrl);
+
                 console.log("Response status:", res.status);
                 if (!res.ok) return;
                 const ids = await res.json();
