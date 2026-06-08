@@ -253,8 +253,7 @@
                     .catch(e => console.error("Błąd WATCH:", e));
             }
     };
-    </script>
-    <script>
+
         async function loadActuatorData() {
             try {
                 const healthRes = await fetch(contextPath + '/actuator/health');
@@ -278,7 +277,7 @@
             }
         }
         loadActuatorData();
-        setInterval(loadActuatorData, 30000); // Odśwież co 30s
+        setInterval(loadActuatorData, 30000);
     </script>
 </div>
 </body>

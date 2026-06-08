@@ -45,6 +45,10 @@ public class AuctionService {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new RuntimeException("Aukcja nie istnieje"));
 
+        if (auction.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Ta aukcja już się zakończyła i nie można jej licytować.");
+        }
+
         if (bidAmount <= 0) {
             throw new IllegalArgumentException("Oferta musi być większa niż 0.");
         }
@@ -55,7 +59,7 @@ public class AuctionService {
         User freshBidder = userRepository.findById(bidder.getId())
                 .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika"));
 
-        // Pobieramy ostatnią ofertę typu "BID"
+
         var lastBidOpt = auctionHistoryRepository
                 .findByAuctionIdOrderByEventDateDesc(auctionId)
                 .stream()
@@ -66,40 +70,35 @@ public class AuctionService {
             User previousBidder = lastBidOpt.get().getOwner();
 
             if (previousBidder.getId().equals(freshBidder.getId())) {
-                // PRZYPADEK 1: Użytkownik przebija samego siebie
                 float difference = bidAmount - auction.getPrice();
                 if (freshBidder.getWallet() < difference) {
                     throw new IllegalArgumentException("Niewystarczające środki na podbicie oferty. Potrzebujesz dodatkowo: " + difference);
                 }
                 freshBidder.setWallet(freshBidder.getWallet() - difference);
             } else {
-                // PRZYPADEK 2: Użytkownik przebija kogoś innego
                 if (freshBidder.getWallet() < bidAmount) {
                     throw new IllegalArgumentException("Niewystarczające środki. Masz: " + freshBidder.getWallet());
                 }
-                // Zwróć pieniądze poprzedniemu licytatorowi
+
                 User freshPrevious = userRepository.findById(previousBidder.getId()).orElse(null);
                 if (freshPrevious != null) {
                     freshPrevious.setWallet(freshPrevious.getWallet() + auction.getPrice());
                     userRepository.save(freshPrevious);
                 }
-                // Pobierz pełną kwotę od nowego licytatora
+
                 freshBidder.setWallet(freshBidder.getWallet() - bidAmount);
             }
         } else {
-            // PRZYPADEK 3: Pierwsza oferta na tej aukcji
             if (freshBidder.getWallet() < bidAmount) {
                 throw new IllegalArgumentException("Niewystarczające środki. Masz: " + freshBidder.getWallet());
             }
             freshBidder.setWallet(freshBidder.getWallet() - bidAmount);
         }
 
-        // Zapisz stan portfela aktualnego licytatora i zaktualizuj aukcję
         userRepository.save(freshBidder);
         auction.setPrice(bidAmount);
         auctionRepository.save(auction);
 
-        // Zapisz historię
         AuctionHistory history = AuctionHistory.builder()
                 .auction(auction)
                 .eventDate(LocalDateTime.now())
@@ -153,7 +152,6 @@ public class AuctionService {
 
             WebSocketEndpointJSON.broadcastAuctionEnded(auction.getId(), winnerUsername);
 
-            auctionRepository.delete(auction);
         }
     }
 

@@ -8,7 +8,8 @@
     <link rel="stylesheet" th:href="@{/css/header.css}">
     <link rel="stylesheet" th:href="@{/css/menu.css}">
     <link rel="stylesheet" th:href="@{/css/auctions.css}">
-    <title>Main</title>
+    <link rel="icon" th:href="@{/images/logo.png}" type="image/png">
+    <title>Equipment</title>
 </head>
 <body>
     <div th:insert="~{fragments/header :: header}"></div>
@@ -16,7 +17,6 @@
         <div th:insert="~{fragments/menu :: menu}" class="eq-insert"></div>
         <div class="content">
             <div class="filters">
-
                 <select name="rarity" id="rarity">
                     <option value="all">All</option>
                     <option value="common">Common</option>
@@ -25,7 +25,6 @@
                     <option value="epic">Epic</option>
                     <option value="legendary">Legendary</option>
                 </select>
-
                 <select name="item-type" id="item-type">
                     <option value="all">All</option>
                     <option value="weapon">⚔️ Weapon</option>
@@ -36,73 +35,54 @@
                 </select>
             </div>
 
-
             <p class="auctions-count">Showing <span th:text="${itemsCount}">0</span> items</p>
 
             <div class="offers">
+                <div class="offer"
+                     th:each="item : ${items}"
+                     th:attr="data-rarity=${item.item.rarity.toLowerCase()}, data-type=${item.item.type.toLowerCase()}">
 
-                <div class="offer" th:each="item : ${items}"   th:attr="data-rarity=${item.item.rarity.toLowerCase()}, data-type=${item.item.type.toLowerCase()}">
                     <div class="info">
-                        <div class="rarity" th:text="${item.item.rarity}" th:attr="data-type=${item.item.rarity.toLowerCase()}">Rarity</div>
-
+                        <div class="rarity"
+                             th:text="${item.item.rarity}"
+                             th:attr="data-type=${item.item.rarity.toLowerCase()}">Rarity</div>
 
                         <div th:switch="${item.item.type != null ? item.item.type.toLowerCase() : 'default'}">
-                            <img th:case="'armor'" th:src="@{/images/abdominal-armor.svg}" width="100" height="100" />
-                            <img th:case="'weapon'" th:src="@{/images/bowie-knife.svg}" width="100" height="100" />
-                            <img th:case="'shield'" th:src="@{/images/checked-shield.svg}" width="100" height="100" />
-                            <img th:case="'potion'" th:src="@{/images/round-potion.svg}" width="100" height="100" />
-                            <img th:case="'accessory'" th:src="@{/images/gold-shell.svg}" width="100" height="100" />
-                            <img th:case="*" th:src="@{/images/default.svg}" width="100" height="100" />
+                            <img th:case="'armor'"     th:src="@{/images/abdominal-armor.svg}" width="100" height="100"/>
+                            <img th:case="'weapon'"    th:src="@{/images/bowie-knife.svg}"     width="100" height="100"/>
+                            <img th:case="'shield'"    th:src="@{/images/checked-shield.svg}"  width="100" height="100"/>
+                            <img th:case="'potion'"    th:src="@{/images/round-potion.svg}"    width="100" height="100"/>
+                            <img th:case="'accessory'" th:src="@{/images/gold-shell.svg}"      width="100" height="100"/>
+                            <img th:case="*"           th:src="@{/images/default.svg}"         width="100" height="100"/>
                         </div>
                     </div>
 
                     <div class="details">
-                        <div>
-                            <p class="item-name" th:text="${item.item.name}">Item Name</p>
-                        </div>
+                        <p class="item-name" th:text="${item.item.name}">Item Name</p>
                     </div>
 
                     <form th:if="${!item.onAuction}" th:action="@{/sell}" method="post" class="offerButtons">
                         <input type="hidden" name="itemId" th:value="${item.id}">
-
                         <input type="number" name="price" placeholder="Price" min="0.01" step="0.01" required>
-
                         <label>Czas: <span th:id="'val-' + ${item.item.id}">12</span> h</label>
                         <input type="range" name="hours" min="1" max="24" value="12"
-                               th:oninput="'document.getElementById(\'val-' + ${item.item.id} + '\').innerText = this.value'"
-                        />
-
+                               th:oninput="'document.getElementById(\'val-' + ${item.item.id} + '\').innerText = this.value'"/>
                         <button type="submit" class="bid">Sell item</button>
                     </form>
 
-
                     <div th:if="${item.onAuction}" class="offerButtons on-auction-info">
                         <p class="being-sold-label">⚔️ Item is being sold</p>
-
                         <div class="auction-live-info" th:with="auction=${auctionByItemId[item.item.id]}">
                             <div class="live-price">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M13.744 17.736a6 6 0 1 1-7.48-7.48"/>
-                                    <path d="M15 6h1v4"/>
-                                    <circle cx="16" cy="8" r="6"/>
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.744 17.736a6 6 0 1 1-7.48-7.48"/><path d="M15 6h1v4"/><circle cx="16" cy="8" r="6"/></svg>
                                 Current price:
                                 <strong th:id="'eq-price-' + ${item.item.id}"
-                                        th:text="${auction != null} ? ${auction.price} : '?'">
-                                    0
-                                </strong>
-                                gold
+                                        th:text="${auction != null} ? ${auction.price} : '?'">0</strong> gold
                             </div>
-
                             <div class="live-timer"
                                  th:attr="data-end-date=${auction != null} ? ${auction.endDate} : ''"
                                  th:id="'eq-timer-' + ${item.item.id}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M12 6v6l4 2"/>
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                                 <span class="eq-countdown">--:--:--</span>
                             </div>
                         </div>
@@ -111,62 +91,6 @@
             </div>
         </div>
     </main>
-    <script>
-        function updateEquipmentCountdowns() {
-            document.querySelectorAll('.live-timer[data-end-date]').forEach(el => {
-                const endDate = el.getAttribute('data-end-date');
-                if (!endDate) return;
-                const distance = new Date(endDate).getTime() - Date.now();
-                const span = el.querySelector('.eq-countdown');
-                if (distance < 0) {
-                    span.textContent = "EXPIRED";
-                } else {
-                    const h = Math.floor(distance / 3600000);
-                    const m = Math.floor((distance % 3600000) / 60000);
-                    const s = Math.floor((distance % 60000) / 1000);
-                    span.textContent = `${h}h ${m}m ${s}s`;
-                }
-            });
-        }
-
-        setInterval(updateEquipmentCountdowns, 1000);
-        updateEquipmentCountdowns();
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const raritySelect = document.getElementById("rarity");
-            const typeSelect = document.getElementById("item-type");
-            const searchInput = document.getElementById("search");
-
-            function filterItems() {
-                const rarityValue = raritySelect.value.toLowerCase();
-                const typeValue = typeSelect.value.toLowerCase();
-                const searchQuery = searchInput.value.toLowerCase();
-
-                document.querySelectorAll(".offer").forEach(offer => {
-
-                    const rarity = offer.getAttribute("data-rarity") || "";
-                    const type = offer.getAttribute("data-type") || "";
-                    const name = offer.querySelector(".item-name").textContent.toLowerCase();
-
-                    const matchesRarity = (rarityValue === "all" || rarity === rarityValue);
-                    const matchesType = (typeValue === "all" || type === typeValue);
-                    const matchesName = name.includes(searchQuery);
-
-
-                    if (matchesRarity && matchesType && matchesName) {
-                        offer.style.display = "flex";
-                    } else {
-                        offer.style.display = "none";
-                    }
-                });
-            }
-
-
-            raritySelect.addEventListener("change", filterItems);
-            typeSelect.addEventListener("change", filterItems);
-            searchInput.addEventListener("input", filterItems);
-        });
-    </script>
 
     <footer class="actuator-footer">
         <div class="actuator-info" id="actuator-bar">
@@ -175,5 +99,48 @@
             <span>Java: <b id="java-version">--</b></span>
         </div>
     </footer>
+
+    <script>
+        function updateEquipmentCountdowns() {
+            document.querySelectorAll('.live-timer[data-end-date]').forEach(el => {
+                const endDate = el.getAttribute('data-end-date');
+                if (!endDate) return;
+                const distance = new Date(endDate).getTime() - Date.now();
+                const span = el.querySelector('.eq-countdown');
+                if (distance < 0) { span.textContent = "EXPIRED"; return; }
+                const h = Math.floor(distance / 3600000);
+                const m = Math.floor((distance % 3600000) / 60000);
+                const s = Math.floor((distance % 60000) / 1000);
+                span.textContent = `${h}h ${m}m ${s}s`;
+            });
+        }
+        setInterval(updateEquipmentCountdowns, 1000);
+        updateEquipmentCountdowns();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const raritySelect = document.getElementById("rarity");
+            const typeSelect   = document.getElementById("item-type");
+            const searchInput  = document.getElementById("search");
+
+            function filterItems() {
+                const rv = raritySelect.value.toLowerCase();
+                const tv = typeSelect.value.toLowerCase();
+                const sv = searchInput ? searchInput.value.toLowerCase() : "";
+                document.querySelectorAll(".offer").forEach(offer => {
+                    const rarity = offer.getAttribute("data-rarity") || "";
+                    const type   = offer.getAttribute("data-type") || "";
+                    const name   = offer.querySelector(".item-name").textContent.toLowerCase();
+                    const ok = (rv === "all" || rarity === rv)
+                            && (tv === "all" || type === tv)
+                            && name.includes(sv);
+                    offer.style.display = ok ? "flex" : "none";
+                });
+            }
+
+            raritySelect.addEventListener("change", filterItems);
+            typeSelect.addEventListener("change", filterItems);
+            if (searchInput) searchInput.addEventListener("input", filterItems);
+        });
+    </script>
 </body>
 </html>

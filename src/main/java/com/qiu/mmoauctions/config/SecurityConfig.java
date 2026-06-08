@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .and()
                 .authorizeRequests()
-                .antMatchers("/login", "/register", "/css/**", "/js/**", "/websocketEndPointJSON/**").permitAll()
+                .antMatchers("/login", "/register", "/css/**", "/images/logo.png").permitAll()
                 .antMatchers("/auctions", "/equipment").authenticated()
                 .anyRequest().authenticated()
                 .and()
@@ -60,7 +60,7 @@ public class SecurityConfig {
                 .permitAll();
 
         http.sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Tutaj to umieszczamy
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .maximumSessions(1)
                 .sessionRegistry(sessionRegistry());
 

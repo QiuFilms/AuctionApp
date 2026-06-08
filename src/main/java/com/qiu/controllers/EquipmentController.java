@@ -42,7 +42,6 @@ public class EquipmentController {
             List<ItemUser> items = user.getItems();
 
 
-            // Mapa itemId -> Auction dla przedmiotów będących na aukcji
             Map<Long, Auction> auctionByItemId = auctionService.findAll().stream()
                     .filter(a -> a.getItem() != null)
                     .collect(Collectors.toMap(

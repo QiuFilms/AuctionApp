@@ -48,9 +48,10 @@ public class AuctionController {
 
         List<Auction> filteredAuctions = allAuctions.stream()
                 .filter(a -> a.getSeller() != null && !a.getSeller().getUsername().equals(currentUsername))
+                .filter(a -> a.getEndDate().isAfter(LocalDateTime.now()))
                 .toList();
 
-        // AuctionController.showAuctions() — dodaj mapę leadingBidders
+
         Map<Long, String> leadingBidders = new HashMap<>();
         filteredAuctions.forEach(a -> {
             auctionHistoryRepository
@@ -78,7 +79,6 @@ public class AuctionController {
             auctionService.createAuctionFromItem(data.getItemId(), data.getPrice(), data.getHours());
             statsService.updateAuctionsCount();
         } catch (IllegalArgumentException e) {
-            // Przekazujemy błąd do widoku (musisz obsłużyć wyświetlanie w HTML)
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
