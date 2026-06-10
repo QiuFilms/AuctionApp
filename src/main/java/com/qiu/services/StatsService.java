@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class StatsService {
     @Autowired
@@ -28,6 +30,6 @@ public class StatsService {
     }
 
     public long countAllAuctions() {
-        return auctionRepository.count();
+        return auctionRepository.findAvailableAuctions(LocalDateTime.now()).size();
     }
 }

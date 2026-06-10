@@ -13,7 +13,7 @@ import java.util.List;
 public interface AuctionHistoryRepository extends JpaRepository<AuctionHistory, Long> {
     List<AuctionHistory> findByAuctionIdOrderByEventDateDesc(Long auctionId);
 
-    List<AuctionHistory> findByOwnerAndEventType(User owner, String eventType);
+    List<AuctionHistory> findByAuctionIdInAndEventType(List<Long> auctionIds, String eventType);
 
     @Query("SELECT h FROM AuctionHistory h WHERE h.owner.username = :username AND h.eventType = :eventType")
     List<AuctionHistory> findByOwnerUsernameAndEventType(

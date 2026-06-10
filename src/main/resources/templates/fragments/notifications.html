@@ -211,19 +211,6 @@
         };
 
 
-        window.toggleWatch = function(heartEl) {
-            const auctionId = parseInt(heartEl.getAttribute("data-auction-id"));
-
-            if (window.watchedAuctions.has(auctionId)) {
-                window.watchedAuctions.delete(auctionId);
-                heartEl.classList.remove("watched");
-                window.auctionWs.send(JSON.stringify({ action: "UNSUBSCRIBE", auctionId }));
-            } else {
-                window.watchedAuctions.add(auctionId);
-                heartEl.classList.add("watched");
-                window.auctionWs.send(JSON.stringify({ action: "SUBSCRIBE", auctionId }));
-            }
-        };
 
         window.subscribeToAuction = function(auctionId) {
             if (!window.watchedAuctions.has(auctionId)) {
@@ -236,12 +223,14 @@
             const auctionId = parseInt(heartEl.getAttribute("data-auction-id"));
             const isWatching = window.watchedAuctions.has(auctionId);
 
+            const url = `/mmoauctions/auctions/${auctionId}/watch`
+
             if (isWatching) {
                 window.watchedAuctions.delete(auctionId);
                 heartEl.classList.remove("watched");
                 window.auctionWs.send(JSON.stringify({ action: "UNSUBSCRIBE", auctionId }));
 
-                fetch(`/auctions/${auctionId}/watch?watching=false`, { method: "POST" })
+                fetch(url + "?watching=false", { method: "POST" })
                     .catch(e => console.error("Błąd UNWATCH:", e));
 
             } else {
@@ -249,10 +238,10 @@
                 heartEl.classList.add("watched");
                 window.auctionWs.send(JSON.stringify({ action: "SUBSCRIBE", auctionId }));
 
-                fetch(`/auctions/${auctionId}/watch?watching=true`, { method: "POST" })
+                fetch(url + "?watching=true", { method: "POST" })
                     .catch(e => console.error("Błąd WATCH:", e));
             }
-    };
+        };
 
         async function loadActuatorData() {
             try {

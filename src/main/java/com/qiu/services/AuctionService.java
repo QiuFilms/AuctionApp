@@ -10,7 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class AuctionService {
@@ -112,20 +116,29 @@ public class AuctionService {
 
 
 
-    @Scheduled(fixedRate = 2000)
+    @Scheduled(fixedRate = 5000)
     @Transactional
     public void closeExpiredAuctions() {
         LocalDateTime now = LocalDateTime.now();
+
+        // 1. Pobierz wszystkie zakończone aukcje
         List<Auction> expired = auctionRepository.findAll().stream()
                 .filter(a -> a.getEndDate().isBefore(now))
                 .toList();
 
         for (Auction auction : expired) {
-            List<AuctionHistory> history =
-                    auctionHistoryRepository.findByAuctionIdOrderByEventDateDesc(auction.getId());
+            // 2. Pobierz historię dla tej aukcji
+            List<AuctionHistory> history = auctionHistoryRepository.findByAuctionIdOrderByEventDateDesc(auction.getId());
+
+            // 3. SPRAWDŹ CZY JUŻ NIE ROZLICZYLIŚMY TEJ AUKCJI (Kluczowa zmiana!)
+            boolean alreadyEnded = history.stream()
+                    .anyMatch(h -> "ENDED".equals(h.getEventType()));
+
+            if (alreadyEnded) {
+                continue; // Pomijamy aukcje, które już zostały zamknięte
+            }
 
             String winnerUsername = null;
-
             var lastBidOpt = history.stream()
                     .filter(h -> "BID".equals(h.getEventType()))
                     .findFirst();
@@ -135,23 +148,33 @@ public class AuctionService {
                 User winner = lastBid.getOwner();
                 winnerUsername = winner.getUsername();
 
+                // 4. Wypłata dla sprzedawcy (tylko raz!)
                 if (auction.getSeller() != null) {
-                    User seller = userRepository.findById(auction.getSeller().getId())
-                            .orElse(null);
+                    User seller = userRepository.findById(auction.getSeller().getId()).orElse(null);
                     if (seller != null) {
                         seller.setWallet(seller.getWallet() + auction.getPrice());
                         userRepository.save(seller);
                     }
                 }
 
+                // 5. Transfer przedmiotu
                 transferItem(auction.getItem().getId(), winner.getId());
 
             } else {
+                // Aukcja bez licytacji - tylko czyścimy flagę
                 clearAuctionFlag(auction.getItem().getId());
             }
 
-            WebSocketEndpointJSON.broadcastAuctionEnded(auction.getId(), winnerUsername);
+            // 6. ZAPISZ HISTORIĘ ENDED (to blokuje ponowne przetwarzanie)
+            AuctionHistory endedHistory = AuctionHistory.builder()
+                    .auction(auction)
+                    .eventDate(LocalDateTime.now())
+                    .eventType("ENDED")
+                    .owner(auction.getSeller())
+                    .build();
+            auctionHistoryRepository.save(endedHistory);
 
+            WebSocketEndpointJSON.broadcastAuctionEnded(auction.getId(), winnerUsername);
         }
     }
 
@@ -194,7 +217,9 @@ public class AuctionService {
         auction.setItem(itemUser.getItem());
         auction.setPrice((float) price);
         auction.setCreationDate(LocalDateTime.now());
-        auction.setEndDate(LocalDateTime.now().plusHours(hours));
+
+        // Minuty na potrzeby testów
+        auction.setEndDate(LocalDateTime.now().plusMinutes(hours));
         auction.setTimeDuration(hours);
         auctionRepository.save(auction);
 
@@ -219,5 +244,22 @@ public class AuctionService {
                 .owner(user)
                 .build();
         auctionHistoryRepository.save(history);
+    }
+
+    public Map<Long, String> getLeadingBiddersForAuctions(List<Auction> auctions) {
+        if (auctions.isEmpty()) return new HashMap<>();
+
+        List<Long> auctionIds = auctions.stream().map(Auction::getId).toList();
+
+        List<AuctionHistory> history = auctionHistoryRepository.findByAuctionIdInAndEventType(auctionIds, "BID");
+
+        return history.stream()
+                .collect(Collectors.groupingBy(
+                        h -> h.getAuction().getId(),
+                        Collectors.collectingAndThen(
+                                Collectors.maxBy(Comparator.comparing(AuctionHistory::getEventDate)),
+                                opt -> opt.map(h -> h.getOwner().getUsername()).orElse(null)
+                        )
+                ));
     }
 }

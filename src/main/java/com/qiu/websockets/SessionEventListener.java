@@ -28,6 +28,10 @@ public class SessionEventListener {
         statsController.updateOnlineUsersCount();
     }
 
+    @EventListener
+    public void onSessionChange(SessionDestroyedEvent event) {
+        statsController.updateOnlineUsersCount();
+    }
 
     @EventListener
     public void handleSessionCreated(SessionCreationEvent event) {

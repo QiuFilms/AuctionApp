@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 
 @EnableScheduling
-@ComponentScan(basePackages = {"com.qiu.controllers"})
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
 @EnableTransactionManagement
 @ComponentScan(basePackages = {"com.qiu"})

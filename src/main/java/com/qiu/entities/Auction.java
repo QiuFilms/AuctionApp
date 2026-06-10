@@ -1,5 +1,6 @@
 package com.qiu.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 import javax.persistence.*;
@@ -24,6 +25,7 @@ public class Auction implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"items", "wallet"})
     private User seller;
 
     @ManyToOne

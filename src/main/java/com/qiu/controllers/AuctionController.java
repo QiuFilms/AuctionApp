@@ -42,29 +42,14 @@ public class AuctionController {
 
     @GetMapping("/auctions")
     public String showAuctions(Model model, Principal principal) {
-        List<Auction> allAuctions = auctionService.findAll();
-        String currentUsername = principal.getName();
+        String username = principal.getName();
+        List<Auction> auctions = auctionRepository.findAvailableAuctions(LocalDateTime.now(), username);
 
+        Map<Long, String> leadingBidders = auctionService.getLeadingBiddersForAuctions(auctions);
 
-        List<Auction> filteredAuctions = allAuctions.stream()
-                .filter(a -> a.getSeller() != null && !a.getSeller().getUsername().equals(currentUsername))
-                .filter(a -> a.getEndDate().isAfter(LocalDateTime.now()))
-                .toList();
-
-
-        Map<Long, String> leadingBidders = new HashMap<>();
-        filteredAuctions.forEach(a -> {
-            auctionHistoryRepository
-                    .findByAuctionIdOrderByEventDateDesc(a.getId())
-                    .stream()
-                    .filter(h -> "BID".equals(h.getEventType()))
-                    .findFirst()
-                    .ifPresent(h -> leadingBidders.put(a.getId(), h.getOwner().getUsername()));
-        });
+        model.addAttribute("auctions", auctions);
+        model.addAttribute("auctionsCount", auctions.size());
         model.addAttribute("leadingBidders", leadingBidders);
-
-        model.addAttribute("auctions", filteredAuctions);
-        model.addAttribute("auctionsCount", filteredAuctions.size());
         return "auctions";
     }
 
@@ -94,6 +79,7 @@ public class AuctionController {
             @PathVariable Long auctionId,
             @RequestParam float amount,
             Principal principal) {
+
 
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika"));

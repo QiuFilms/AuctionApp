@@ -70,21 +70,18 @@
                         <button type="submit" class="bid">Sell item</button>
                     </form>
 
-                    <div th:if="${item.onAuction}" class="offerButtons on-auction-info">
-                        <p class="being-sold-label">⚔️ Item is being sold</p>
-                        <div class="auction-live-info" th:with="auction=${auctionByItemId[item.item.id]}">
-                            <div class="live-price">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.744 17.736a6 6 0 1 1-7.48-7.48"/><path d="M15 6h1v4"/><circle cx="16" cy="8" r="6"/></svg>
-                                Current price:
-                                <strong th:id="'eq-price-' + ${item.item.id}"
-                                        th:text="${auction != null} ? ${auction.price} : '?'">0</strong> gold
-                            </div>
-                            <div class="live-timer"
-                                 th:attr="data-end-date=${auction != null} ? ${auction.endDate} : ''"
-                                 th:id="'eq-timer-' + ${item.item.id}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                                <span class="eq-countdown">--:--:--</span>
-                            </div>
+                    <div class="auction-live-info"
+                         th:if="${auctionByItemUserId.containsKey(item.id)}"
+                         th:with="auction=${auctionByItemUserId[item.id]}">
+
+                        <div class="live-price">
+                            Current price: <strong th:text="${auction.price}">0</strong> gold
+                        </div>
+
+                        <div class="live-timer"
+                             th:attr="data-end-date=${auction.endDate}"
+                             th:id="'eq-timer-' + ${item.id}">
+                            <span class="eq-countdown">Odliczam...</span>
                         </div>
                     </div>
                 </div>

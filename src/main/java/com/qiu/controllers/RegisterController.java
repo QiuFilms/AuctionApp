@@ -26,15 +26,11 @@ public class RegisterController {
     @PostMapping("/register")
     public String processRegistration(RegisterRequest registerRequest, Model model) {
         try {
-            User user = new User();
-            user.setUsername(registerRequest.getUsername());
-            user.setPassword(registerRequest.getPassword());
-            userService.registerNewUser(user);
-            return "redirect:/login";
+            userService.registerNewUser(registerRequest);
+            return "redirect:/login?registered=true";
         } catch (Exception e) {
             model.addAttribute("error", "Użytkownik o tej nazwie już istnieje!");
 
-            model.addAttribute("error", "Użytkownik o tej nazwie już istnieje!");
             return "register";
         }
     }

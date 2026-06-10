@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,32 +33,35 @@ public class EquipmentController {
     private AuctionService auctionService;
 
     @GetMapping("/equipment")
-    public String showEquipment(
-            Model model,
-            Principal principal) {
+    public String showEquipment(Model model, Principal principal) {
+        User user = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Użytkownik nie istnieje"));
 
-        Optional<User> userOptional = userRepository.findByUsername(principal.getName());
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            List<ItemUser> items = user.getItems();
+        List<ItemUser> items = user.getItems();
 
 
-            Map<Long, Auction> auctionByItemId = auctionService.findAll().stream()
-                    .filter(a -> a.getItem() != null)
-                    .collect(Collectors.toMap(
-                            a -> a.getItem().getId(),
-                            a -> a,
-                            (a1, a2) -> a1
-                    ));
+        List<Auction> activeAuctions = auctionService.findAll().stream()
+                .filter(a -> a.getEndDate().isAfter(LocalDateTime.now()))
+                .collect(Collectors.toList());
 
-            model.addAttribute("items", items);
-            model.addAttribute("itemsCount", items.size());
-            model.addAttribute("auctionByItemId", auctionByItemId);
-        } else {
-            return "redirect:/login";
+
+        Map<Long, Auction> auctionByItemUserId = new HashMap<>();
+
+        for (ItemUser itemUser : items) {
+            for (Auction auction : activeAuctions) {
+                if (auction.getItem().getId().equals(itemUser.getItem().getId())
+                        && auction.getSeller().getId().equals(user.getId())) {
+
+                    auctionByItemUserId.put(itemUser.getId(), auction);
+                    activeAuctions.remove(auction);
+                    break;
+                }
+            }
         }
 
+        model.addAttribute("items", items);
+        model.addAttribute("itemsCount", items.size());
+        model.addAttribute("auctionByItemUserId", auctionByItemUserId);
         return "equipment";
     }
 }
