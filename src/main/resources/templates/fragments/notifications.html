@@ -160,11 +160,6 @@
                     break;
                 }
 
-                case "BAR_GRAPH": {
-                    const { dbMain, dbAuth, activity } = msg.data;
-                    updateBarChart(dbMain, dbAuth, activity);
-                    break;
-                }
 
                 case "AUCTION_ENDED": {
                     const { auctionId, winner } = msg.data;

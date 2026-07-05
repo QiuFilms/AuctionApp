@@ -140,7 +140,7 @@
                     uploadAvatarBtn.innerText = "Wgrywanie...";
 
                     // Zapytanie do API w Go (port 8080)
-                    fetchWithToken('https://localhost:8080/api/avatar/upload', {
+                    fetchWithToken('https://16.171.254.158:8080/api/avatar/upload', {
                         method: 'POST',
                         body: formData
                     })
@@ -167,7 +167,7 @@
                 avatarMenu.style.display = 'none';
 
                 // Zapytanie do API w Go o plik
-                fetchWithToken('https://localhost:8080/api/avatar/download', {
+                fetchWithToken('https://16.171.254.158:8080/api/avatar/download', {
                     method: 'GET'
                 })
                 .then(async response => {
