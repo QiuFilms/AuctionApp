@@ -4,7 +4,7 @@
 Projekt REST API w języku Go pełni rolę warstwy pośredniczącej (gateway), która umożliwia klientom komunikację z głównym systemem zaplecza (opartym prawdopodobnie na Springu) za pośrednictwem protokołu gRPC. Głównym zadaniem jest obsługa użytkowników, zarządzanie ich ekwipunkiem, profilami (awatarami) oraz aukcjami przedmiotów.
 
 ## Zakres funkcjonalny
-* **Autentykacja**: Weryfikacja danych użytkownika i wydawanie tokenów JWT.
+* **Autoryzacja**: Weryfikacja danych użytkownika i wydawanie tokenów JWT.
 * **Zarządzanie ekwipunkiem**: Pobieranie listy posiadanych przedmiotów oraz operacje dodawania i usuwania przedmiotów.
 * **Obsługa mediów**: Wgrywanie oraz pobieranie plików awatarów użytkowników.
 * **Aukcje**: Dostęp do listy wszystkich aktywnych aukcji w systemie.
