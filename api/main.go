@@ -54,9 +54,11 @@ func LoggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 func CORSMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "https://localhost:8443")
+		// w.Header().Set("Access-Control-Allow-Origin", "https://localhost:8443")
+		w.Header().Set("Access-Control-Allow-Origin", "https://16.171.254.158:8443")
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-ID")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
@@ -80,7 +82,7 @@ func main() {
 	fmt.Println("Uruchamianie API w Go (BFF)...")
 	InitDB()
 
-	client, conn := grpcclient.NewClient("localhost:9090")
+	client, conn := grpcclient.NewClient("spring-app:9090")
 	defer conn.Close()
 
 	api := handlers.API{GrpcClient: client}
