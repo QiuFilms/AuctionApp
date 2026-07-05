@@ -20,6 +20,13 @@ public class User implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+
+    @Column(name = "avatar", columnDefinition = "bytea")
+    private byte[] avatar;
+
+    @Column(name = "avatar_content_type", length = 50)
+    private String avatarContentType;
+
     @Id
     private Long id;
 

@@ -8,7 +8,9 @@ DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
-    wallet REAL NOT NULL DEFAULT 0.0
+    wallet REAL NOT NULL DEFAULT 0.0,
+    avatar_content_type VARCHAR(50),
+    avatar BYTEA
 );
 
 

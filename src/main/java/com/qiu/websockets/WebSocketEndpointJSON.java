@@ -131,6 +131,16 @@ public class WebSocketEndpointJSON extends AbstractWebSocketHandler {
         auctionSubscribers.remove(auctionId);
     }
 
+    public static void broadcastGraphData(double val1, double val2, double val3) {
+        String message = buildMessage("BAR_GRAPH", Map.of(
+                "dbMain", val1,
+                "dbAuth", val2,
+                "activity", val3
+        ));
+
+        sessions.forEach(s -> sendToSession(s, message));
+    }
+
     private static void sendToSession(WebSocketSession session, String message) {
         if (session != null && session.isOpen()) {
             try {

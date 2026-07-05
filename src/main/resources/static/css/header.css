@@ -62,12 +62,16 @@ header {
     cursor: pointer;
 }
 
-.header-right > .account > svg {
+.header-right > .account > .avatar-wrapper > #avatarIcon > svg {
     margin-right: 10px;
     width: 30px;
     height: 30px;
     border-radius: 50%;
     background-color: #1f1f1f;
+}
+
+.header-right > .account > .avatar-wrapper > #avatarIcon{
+    cursor: pointer;
 }
 
 .header-right > .account {

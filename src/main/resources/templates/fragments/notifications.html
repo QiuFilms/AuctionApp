@@ -103,13 +103,15 @@
             toast.addEventListener("animationend", () => toast.remove());
         }
 
+
+
         window.watchedAuctions = window.watchedAuctions || new Set();
 
         const path = window.location.pathname.split('/')[1];
         const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        console.log(wsProtocol + window.location.host + "/" + path + "/websocketEndPointJSON")
+        console.log(wsProtocol + window.location.host + "/websocketEndPointJSON")
 
-        window.auctionWs = new WebSocket(wsProtocol + window.location.host + "/" + path + "/websocketEndPointJSON");
+        window.auctionWs = new WebSocket(wsProtocol + window.location.host + "/websocketEndPointJSON");
 
         let contextPath = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 1));
         const bidsUrl = contextPath + "/auctions/my-active-bids";
@@ -155,6 +157,12 @@
                         `Aukcja #${auctionId} — ${parseFloat(newPrice).toFixed(2)} gold przez ${bidder}`,
                         "info"
                     );
+                    break;
+                }
+
+                case "BAR_GRAPH": {
+                    const { dbMain, dbAuth, activity } = msg.data;
+                    updateBarChart(dbMain, dbAuth, activity);
                     break;
                 }
 

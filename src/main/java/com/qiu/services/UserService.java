@@ -1,6 +1,6 @@
 package com.qiu.services;
 
-import com.qiu.dto.RegisterRequest;
+import com.qiu.dto.AuthRequest;
 import com.qiu.entities.Item;
 import com.qiu.entities.ItemUser;
 import com.qiu.entities.User;
@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -43,9 +44,16 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    public void save(User user){
+        userRepository.save(user);
+    }
+
+    public Optional<User> findByUsername(String username){
+        return userRepository.findByUsername(username);
+    }
 
     @Transactional
-    public void registerNewUser(RegisterRequest registerRequest) {
+    public void registerNewUser(AuthRequest registerRequest) {
         long newUserId = -1;
 
         String insertAuthSql = "INSERT INTO users (username, password, creation_date) VALUES (?, ?, ?)";
@@ -75,6 +83,8 @@ public class UserService {
         finalUser.setId(newUserId);
         finalUser.setUsername(registerRequest.getUsername());
         finalUser.setWallet(1000.0f);
+        finalUser.setAvatarContentType(null);
+        finalUser.setAvatar(null);
         userRepository.save(finalUser);
 
         List<Item> availableItems = itemRepository.findAll();

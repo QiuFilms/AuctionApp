@@ -7,6 +7,7 @@ import javax.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -43,5 +44,8 @@ public class Auction implements Serializable {
 
     @Column(name = "price", nullable = false)
     private float price;
+
+    @Transient
+    private List<AuctionHistory> history;
 
 }

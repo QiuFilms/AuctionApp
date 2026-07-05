@@ -22,7 +22,7 @@
         <div class="outer-container">
             <div class="inner-container">
                 <h2>Log in</h2>
-                <form th:action="@{/login}" method="post">
+                <form  method="post">
                     <div class="form-group">
                         <label for="username">Username</label>
                         <input type="text" id="username" name="username" required autocomplete="username">
@@ -33,7 +33,7 @@
                     </div>
                     <button type="submit" id="loginButton">Log in</button>
                 </form>
-                <div th:if="${param.error}" class="error">
+                <div id="errorMessage" class="error" style="display:none">
                     <p>Nieprawidłowa nazwa użytkownika lub hasło.</p>
                 </div>
                 <p>
@@ -49,10 +49,51 @@
         document.addEventListener("DOMContentLoaded", function() {
             const form = document.querySelector('form');
             const btn  = document.getElementById('loginButton');
+            const errorDiv = document.getElementById('errorMessage'); // Pamiętaj, żeby dodać id="errorMessage" do div-a z błędem w HTML!
+
             if (form && btn) {
-                form.addEventListener('submit', function() {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
                     btn.disabled = true;
                     btn.innerText = "Logging in...";
+
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                    }
+
+                    // --- TUTAJ JEST BRAKUJĄCY KOD ---
+                    // Pobieramy to, co użytkownik wpisał w okienka
+                    const usernameVal = document.getElementById('username').value;
+                    const passwordVal = document.getElementById('password').value;
+                    // ---------------------------------
+
+                    fetch('/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: usernameVal, // Teraz JS wie, czym jest usernameVal
+                            password: passwordVal  // Teraz JS wie, czym jest passwordVal
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Nieprawidłowe dane logowania');
+                        }
+                        // Sukces! Przekierowanie na stronę aukcji
+                        window.location.href = '/auctions';
+                    })
+                    .catch(error => {
+                        // Błąd! Odblokowujemy formularz i pokazujemy na czerwono napis
+                        btn.disabled = false;
+                        btn.innerText = "Log in";
+
+                        if (errorDiv) {
+                            errorDiv.style.display = 'block';
+                        }
+                    });
                 });
             }
         });

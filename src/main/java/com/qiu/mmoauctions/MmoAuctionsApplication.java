@@ -1,5 +1,6 @@
 package com.qiu.mmoauctions;
 
+import net.devh.boot.grpc.server.autoconfigure.GrpcServerSecurityAutoConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -11,7 +12,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 
 @EnableScheduling
-@SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
+@SpringBootApplication(exclude = { SecurityAutoConfiguration.class, GrpcServerSecurityAutoConfiguration.class })
 @EnableTransactionManagement
 @ComponentScan(basePackages = {"com.qiu"})
 @EnableJpaRepositories(basePackages = "com.qiu.repositories")

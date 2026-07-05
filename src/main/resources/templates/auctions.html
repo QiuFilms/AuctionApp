@@ -127,7 +127,7 @@
         const amount = parseFloat(input.value);
         if (!amount || amount <= 0) { showToast("Błąd", "Podaj poprawną kwotę.", "error"); return; }
         window.subscribeToAuction(auctionId);
-        fetch(contextPath + `/auctions/${auctionId}/bid?amount=${amount}`, { method: "POST" })
+        fetch(contextPath + `/auctions/${auctionId}/bid?amount=${amount}`, { method: "PUT" })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {

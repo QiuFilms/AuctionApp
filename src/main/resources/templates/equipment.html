@@ -33,6 +33,22 @@
                     <option value="potion">🧪 Potion</option>
                     <option value="accessory">✨ Accessory</option>
                 </select>
+
+
+
+
+                <form id="addItemForm" th:action="@{/equipment/items/add}" method="post">
+                    <select name="itemId" required>
+                        <option value="">-- Wybierz przedmiot --</option>
+                        <option th:each="item : ${allAvailableItems}"
+                                th:value="${item.id}"
+                                th:text="${item.name + ' (' + item.rarity + ')'}">
+                            Nazwa przedmiotu (Rzadkość)
+                        </option>
+                    </select>
+
+                    <button type="submit" class="bid">Dodaj przedmiot</button>
+                </form>
             </div>
 
             <p class="auctions-count">Showing <span th:text="${itemsCount}">0</span> items</p>
@@ -68,7 +84,11 @@
                         <input type="range" name="hours" min="1" max="24" value="12"
                                th:oninput="'document.getElementById(\'val-' + ${item.item.id} + '\').innerText = this.value'"/>
                         <button type="submit" class="bid">Sell item</button>
+
                     </form>
+                    <div th:if="${!item.onAuction}">
+                        <button class="delete-btn" th:attr="data-item-id=${item.id}" onclick="deleteItem(this)">DELETE</button>
+                    </div>
 
                     <div class="auction-live-info"
                          th:if="${auctionByItemUserId.containsKey(item.id)}"
@@ -138,6 +158,21 @@
             typeSelect.addEventListener("change", filterItems);
             if (searchInput) searchInput.addEventListener("input", filterItems);
         });
+
+        function deleteItem(deleteBtn){
+            const itemId = parseInt(deleteBtn.getAttribute("data-item-id"));
+
+            fetch(contextPath + `/equipment/items/${itemId}`, { method: "DELETE" })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "/equipment?delete-success=true";
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(() => showToast("Błąd", "Problem z połączeniem.", "error"));
+        }
     </script>
 </body>
 </html>

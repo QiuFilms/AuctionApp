@@ -10,10 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,7 +39,26 @@ public class AuctionService {
         return auctionRepository.findAll();
     }
 
+    public Optional<Auction> findById(Long id){
+        return auctionRepository.findById(id);
+    }
 
+    public List<Auction> findBySeller(User user){
+        return auctionRepository.findBySeller(user);
+    }
+
+    public List<Auction> findBySellerNot(User user){
+        return auctionRepository.findBySellerNot(user);
+    }
+
+
+    public List<Auction> availableAuctions(LocalDateTime time, String username){
+        return auctionRepository.findAvailableAuctions(time, username);
+    }
+
+    public List<Auction> availableAuctions(LocalDateTime time){
+        return auctionRepository.findAvailableAuctions(time);
+    }
 
     @Transactional
     public void placeBid(Long auctionId, float bidAmount, User bidder) {
@@ -189,7 +205,6 @@ public class AuctionService {
     private void clearAuctionFlag(Long itemId) {
         jdbcTemplate.update("UPDATE items_user SET on_auction = false WHERE item_id = ?", itemId);
     }
-
 
 
     @Transactional

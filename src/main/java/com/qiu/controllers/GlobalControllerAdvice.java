@@ -1,8 +1,8 @@
 package com.qiu.controllers;
 
 import com.qiu.entities.User;
-import com.qiu.repositories.UserRepository;
 import com.qiu.services.StatsService;
+import com.qiu.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,14 +20,15 @@ public class GlobalControllerAdvice {
     }
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
+
 
     @ModelAttribute("user")
     public User addLoggedInUserToModel() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
             String username = auth.getName();
-            return userRepository.findByUsername(username).orElse(null);
+            return userService.findByUsername(username).orElse(null);
         }
         return null;
     }

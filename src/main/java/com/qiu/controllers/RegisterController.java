@@ -1,6 +1,6 @@
 package com.qiu.controllers;
 
-import com.qiu.dto.RegisterRequest;
+import com.qiu.dto.AuthRequest;
 import com.qiu.entities.User;
 import com.qiu.services.UserService;
 import org.springframework.stereotype.Controller;
@@ -24,7 +24,7 @@ public class RegisterController {
 
 
     @PostMapping("/register")
-    public String processRegistration(RegisterRequest registerRequest, Model model) {
+    public String processRegistration(AuthRequest registerRequest, Model model) {
         try {
             userService.registerNewUser(registerRequest);
             return "redirect:/login?registered=true";

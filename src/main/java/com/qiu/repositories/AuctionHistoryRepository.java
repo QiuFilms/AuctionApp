@@ -1,7 +1,6 @@
 package com.qiu.repositories;
 
 import com.qiu.entities.AuctionHistory;
-import com.qiu.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +10,8 @@ import java.util.List;
 
 @Repository
 public interface AuctionHistoryRepository extends JpaRepository<AuctionHistory, Long> {
+    List<AuctionHistory> findByAuctionId(Long id);
+
     List<AuctionHistory> findByAuctionIdOrderByEventDateDesc(Long auctionId);
 
     List<AuctionHistory> findByAuctionIdInAndEventType(List<Long> auctionIds, String eventType);

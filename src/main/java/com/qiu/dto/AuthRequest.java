@@ -1,11 +1,13 @@
 package com.qiu.dto;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class RegisterRequest {
+@NoArgsConstructor
+public class AuthRequest {
     private String username;
     private String password;
 

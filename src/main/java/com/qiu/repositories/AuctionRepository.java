@@ -1,6 +1,7 @@
 package com.qiu.repositories;
 
 import com.qiu.entities.Auction;
+import com.qiu.entities.Item;
 import com.qiu.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,4 +21,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Auction> findBySellerNot(User seller);
 
     List<Auction> findBySeller(User seller);
+
+    List<Auction> findBySellerAndItemId(User seller, Long item);
 }

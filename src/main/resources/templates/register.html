@@ -22,7 +22,7 @@
         <div class="outer-container">
             <div class="inner-container">
                 <h2>Register</h2>
-                <form th:action="@{/register}" method="post">
+                <form method="post">
                     <div class="form-group">
                         <label for="username">Username</label>
                         <input type="text" id="username" name="username" required autocomplete="username">
@@ -33,8 +33,8 @@
                     </div>
                     <button type="submit" id="registerButton">Register</button>
                 </form>
-                <div th:if="${error}" class="error">
-                    <p th:text="${error}"></p>
+                <div id="errorMessage" class="error" style="display:none">
+                    <p>Login jest już zajęty</p>
                 </div>
                 <p>
                     Already have an account? <a th:href="@{/login}">Log in here.</a>
@@ -45,14 +45,55 @@
 
     <footer></footer>
 
-    <script defer>
+    <script>
         document.addEventListener("DOMContentLoaded", function() {
             const form = document.querySelector('form');
             const btn  = document.getElementById('registerButton');
+            const errorDiv = document.getElementById('errorMessage'); // Pamiętaj, żeby dodać id="errorMessage" do div-a z błędem w HTML!
+
             if (form && btn) {
-                form.addEventListener('submit', function() {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
                     btn.disabled = true;
                     btn.innerText = "Registering...";
+
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                    }
+
+                    // --- TUTAJ JEST BRAKUJĄCY KOD ---
+                    // Pobieramy to, co użytkownik wpisał w okienka
+                    const usernameVal = document.getElementById('username').value;
+                    const passwordVal = document.getElementById('password').value;
+                    // ---------------------------------
+
+                    fetch('/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: usernameVal, // Teraz JS wie, czym jest usernameVal
+                            password: passwordVal  // Teraz JS wie, czym jest passwordVal
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Nieprawidłowe dane');
+                        }
+                        // Sukces! Przekierowanie na stronę aukcji
+                        window.location.href = '/auctions';
+                    })
+                    .catch(error => {
+                        // Błąd! Odblokowujemy formularz i pokazujemy na czerwono napis
+                        btn.disabled = false;
+                        btn.innerText = "Register";
+
+                        if (errorDiv) {
+                            errorDiv.style.display = 'block';
+                        }
+                    });
                 });
             }
         });
