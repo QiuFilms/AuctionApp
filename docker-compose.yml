@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  spring-app:
+    build: 
+      context: ./mmoauctions  # Docker automatycznie znajdzie plik Dockerfile w tym folderze
+    ports:
+      - "8443:8443"
+  
+  go-api:
+    build: 
+      context: ./mmo-auctions-go # Docker automatycznie znajdzie plik Dockerfile w tym folderze
+    ports:
+      - "8080:8080"
