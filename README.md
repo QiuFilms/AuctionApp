@@ -35,72 +35,7 @@ Projekt REST API w języku Go pełni rolę warstwy pośredniczącej (gateway), k
 
 ## Diagramy ERD
 ### 1. Baza podstawowa
-```plantuml
-@startuml
-entity "users" {
-  *id : BIGINT <<PK>>
-  --
-  *username : VARCHAR(255) <<UNIQUE>>
-  *wallet : REAL
-  avatar_content_type : VARCHAR(50)
-  avatar : BYTEA
-}
-
-entity "items" {
-  *id : BIGSERIAL <<PK>>
-  --
-  *name : VARCHAR(255)
-  rarity : VARCHAR(255)
-  type : VARCHAR(50)
-  min_level : INT
-}
-
-entity "items_user" {
-  *unique_item_id : BIGSERIAL <<PK>>
-  --
-  *user_id : BIGINT <<FK>>
-  *item_id : BIGINT <<FK>>
-  *on_auction : BOOLEAN
-}
-
-entity "auctions" {
-  *id : BIGSERIAL <<PK>>
-  --
-  *user_id : BIGINT <<FK>>
-  *item_id : BIGINT <<FK>>
-  *time_duration : INT
-  *creation_date : TIMESTAMP
-  *end_date : TIMESTAMP
-  *price : REAL
-}
-
-entity "auction_history" {
-  *id : BIGSERIAL <<PK>>
-  --
-  *auction_id : BIGINT <<FK>>
-  *event_date : TIMESTAMP
-  *event_type : VARCHAR(255)
-  *user_id : BIGINT <<FK>>
-}
-
-users ||--o{ items_user
-items ||--o{ items_user
-users ||--o{ auctions
-items ||--o{ auctions
-auctions ||--o{ auction_history
-users ||--o{ auction_history
-@enduml
-```
+![Tekst alternatywny](main_db.png)
 
 ### 2. Baza autoryzacyjna
-```plantuml
-@startuml
-entity "users" {
-  *id : BIGSERIAL <<PK>>
-  --
-  *username : VARCHAR(255) <<UNIQUE>>
-  *password : VARCHAR(255)
-  creation_date : TIMESTAMP
-}
-@enduml
-```
+![Tekst alternatywny](auth_db.png)
