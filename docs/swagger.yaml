@@ -1,0 +1,244 @@
+basePath: /
+definitions:
+  internal_handlers.LoginPayload:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  mmo-auctions-go_internal_handlers.LoginPayload:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  pb.ActionResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  pb.AuctionListResponse:
+    properties:
+      active_auctions:
+        items:
+          type: string
+        type: array
+    type: object
+  pb.InventoryResponse:
+    properties:
+      items:
+        items:
+          type: string
+        type: array
+    type: object
+  pb.UploadAvatarResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API serwera Go (BFF) dla systemu aukcyjnego.
+  title: Arcane Market API
+  version: "1.0"
+paths:
+  /api/auctions:
+    get:
+      description: Zwraca listę wszystkich dostępnych aukcji
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pb.AuctionListResponse'
+      security:
+      - BearerAuth: []
+      summary: Lista aukcji
+      tags:
+      - Auctions
+  /api/avatar/download:
+    get:
+      description: Pobiera plik avatara użytkownika
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      security:
+      - BearerAuth: []
+      summary: Pobierz avatar
+      tags:
+      - Avatar
+  /api/avatar/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Wgrywa plik graficzny jako avatar użytkownika
+      parameters:
+      - description: Plik avatara (png, jpeg, gif)
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pb.UploadAvatarResponse'
+      security:
+      - BearerAuth: []
+      summary: Prześlij avatar
+      tags:
+      - Avatar
+  /api/inventory:
+    get:
+      description: Zwraca listę przedmiotów w ekwipunku użytkownika
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pb.InventoryResponse'
+      security:
+      - BearerAuth: []
+      summary: Pobierz ekwipunek
+      tags:
+      - Inventory
+  /api/items:
+    get:
+      description: Pobiera katalog wszystkich dostępnych przedmiotów
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pb.InventoryResponse'
+      security:
+      - BearerAuth: []
+      summary: Lista przedmiotów
+      tags:
+      - Items
+  /api/items/add:
+    post:
+      consumes:
+      - application/json
+      description: Dodaje przedmiot do ekwipunku użytkownika
+      parameters:
+      - description: ID przedmiotu
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            itemId:
+              format: int64
+              type: integer
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pb.ActionResponse'
+      security:
+      - BearerAuth: []
+      summary: Dodaj przedmiot
+      tags:
+      - Items
+  /api/items/delete:
+    delete:
+      description: Usuwa przedmiot z ekwipunku użytkownika
+      parameters:
+      - description: ID przedmiotu do usunięcia
+        format: int64
+        in: query
+        name: itemId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pb.ActionResponse'
+      security:
+      - BearerAuth: []
+      summary: Usuń przedmiot
+      tags:
+      - Items
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Weryfikuje dane użytkownika i zwraca token JWT
+      parameters:
+      - description: Dane logowania (username i password)
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.LoginPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Zwraca obiekt z polem 'token'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Błędne dane wejściowe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Błąd wewnętrzny serwera
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logowanie użytkownika
+      tags:
+      - Auth
+  /api/stats:
+    get:
+      description: Zwraca zestawienie liczby wywołań poszczególnych endpointów z podziałem
+        na statusy HTTP
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista statystyk
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: Błąd pobierania statystyk
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Pobierz statystyki użycia endpointów
+      tags:
+      - Stats
+securityDefinitions:
+  BearerAuth:
+    description: Wpisz "Bearer {twój_token}" w pole poniżej.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

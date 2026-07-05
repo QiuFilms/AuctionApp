@@ -1,0 +1,53 @@
+syntax = "proto3";
+package rpg;
+option go_package = "./pb";
+
+service RpgService {
+  rpc GetInventory (UserRequest) returns (InventoryResponse);
+  rpc GetAuctions (Empty) returns (AuctionListResponse);
+  
+  rpc AddItemToInventory (ModifyItemRequest) returns (ActionResponse);
+  rpc RemoveItemFromInventory (ModifyItemRequest) returns (ActionResponse);
+  
+  rpc UploadAvatar (UploadAvatarRequest) returns (UploadAvatarResponse);
+  rpc DownloadAvatar (UserRequest) returns (DownloadAvatarResponse);
+
+  rpc GetItems (Empty) returns (InventoryResponse);
+
+  rpc VerifyUser (LoginRequest) returns (LoginResponse);
+}
+
+message Empty {}
+message UserRequest { string token = 1; }
+message ActionResponse { bool success = 1; string message = 2; }
+
+message InventoryResponse { repeated string items = 1; }
+message ModifyItemRequest { string token = 1; int64 item_id = 2; }
+message AuctionListResponse { repeated string active_auctions = 1; }
+
+message UploadAvatarRequest { 
+    string token = 1; 
+    bytes image_data = 2; 
+    string content_type = 3; // <-- NOWE POLE
+}
+
+message DownloadAvatarResponse { 
+    bytes image_data = 1; 
+    string content_type = 2; // <-- NOWE POLE
+}
+
+message UploadAvatarResponse { 
+    bool success = 1; 
+    string message = 2; 
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+  bool success = 2;
+  string message = 3;
+}
