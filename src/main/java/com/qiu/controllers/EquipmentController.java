@@ -67,7 +67,6 @@ public class EquipmentController {
 
         String username = principal.getName();
 
-        // 1. Pobierz użytkownika, aby mieć dostęp do awatara
         Optional<User> userOpt = userService.findByUsername(username);
 
         String base64Avatar = "";

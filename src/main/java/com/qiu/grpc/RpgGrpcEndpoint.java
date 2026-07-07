@@ -43,10 +43,8 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
 
     @Autowired
     private com.qiu.services.ItemUserService itemUserService; //
-    // --------------------------------------------------------
-    // a) CZYTANIE DANYCH
-    // --------------------------------------------------------
-    private final PasswordEncoder passwordEncoder; // <--- To pole
+
+    private final PasswordEncoder passwordEncoder;
 
     public RpgGrpcEndpoint(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -68,7 +66,6 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
             java.util.List<ItemUser> itemUsers = itemUserRepository.findByUser(user);
 
             for (ItemUser iu : itemUsers) {
-                // Bezpieczny dostęp do nazwy przedmiotu
                 if (iu.getItem() != null) {
                     items.add(iu.getItem().getName());
                 }
@@ -87,16 +84,13 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
 
     @Override
     public void getAuctions(com.qiu.grpc.Empty request, StreamObserver<com.qiu.grpc.AuctionListResponse> responseObserver) {
-        // 1. Pobierz aktywne aukcje z bazy danych
         java.util.List<com.qiu.entities.Auction> activeAuctions =
-                auctionRepository.findAvailableAuctions(java.time.LocalDateTime.now()); //[cite: 3]
+                auctionRepository.findAvailableAuctions(java.time.LocalDateTime.now());
 
-        // 2. Zamień obiekty Auction na listę Stringów (dla uproszczenia w gRPC)
         java.util.List<String> auctions = activeAuctions.stream()
                 .map(auction -> "Aukcja ID: " + auction.getId() + " - do: " + auction.getEndDate())
                 .toList();
 
-        // 3. Zbuduj odpowiedź
         com.qiu.grpc.AuctionListResponse response = com.qiu.grpc.AuctionListResponse.newBuilder()
                 .addAllActiveAuctions(auctions)
                 .build();
@@ -107,10 +101,8 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
 
     @Override
     public void getItems(com.qiu.grpc.Empty request, StreamObserver<com.qiu.grpc.InventoryResponse> responseObserver) {
-        // 1. Pobierz aktywne aukcje z bazy danych
         java.util.List<com.qiu.entities.Item> items = itemRepository.findAll();
 
-        // 2. Zamień obiekty Auction na listę Stringów (dla uproszczenia w gRPC)
         java.util.List<String> itemsFormatted = items.stream()
                 .map(item -> "Item ID: " + item.getId() + " | Name: " + item.getName())
                 .toList();
@@ -124,28 +116,21 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
         responseObserver.onCompleted();
     }
 
-    // --------------------------------------------------------
-    // b) MODYFIKACJA PRZEDMIOTÓW
-    // --------------------------------------------------------
-
     @Override
     public void addItemToInventory(com.qiu.grpc.ModifyItemRequest request, StreamObserver<com.qiu.grpc.ActionResponse> responseObserver) {
         String username = jwtService.extractUsername(request.getToken());
 
-        Long itemId = request.getItemId(); // Konwersja String z gRPC na Long dla bazy
+        Long itemId = request.getItemId();
 
-        // Szukamy użytkownika i przedmiotu
         java.util.Optional<com.qiu.entities.User> userOpt = userRepository.findByUsername(username);
         java.util.Optional<com.qiu.entities.Item> itemOpt = itemRepository.findById(itemId);
 
         if (userOpt.isPresent() && itemOpt.isPresent()) {
-            // Tworzymy powiązanie (zakładając standardową encję ItemUser)
 
             com.qiu.entities.ItemUser itemUser = new com.qiu.entities.ItemUser();
             itemUser.setUser(userOpt.get());
             itemUser.setItem(itemOpt.get());
 
-            // Zapis do bazy
             itemUserRepository.save(itemUser);
 
             com.qiu.grpc.ActionResponse response = com.qiu.grpc.ActionResponse.newBuilder()
@@ -175,7 +160,6 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
         List<ItemUser> items = itemUserRepository.getByUserIdAndItemId(userRepository.findByUsername(username).get().getId(), itemId);
 
         if (items.isEmpty()) {
-            // Obsługa przypadku, gdy przedmiotu nie ma w ekwipunku
             com.qiu.grpc.ActionResponse response = com.qiu.grpc.ActionResponse.newBuilder()
                     .setSuccess(false)
                     .setMessage("Przedmiot nie istnieje w ekwipunku użytkownika.")
@@ -194,11 +178,9 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
             responseObserver.onCompleted();
             return;
         }
-        // 2. Usunięcie przedmiotu z bazy danych
 
         itemUserService.delete(items.get(0));
 
-        // 3. Budowanie pozytywnej odpowiedzi
         com.qiu.grpc.ActionResponse response = com.qiu.grpc.ActionResponse.newBuilder()
                 .setSuccess(true)
                 .setMessage("Przedmiot pomyślnie usunięty.")
@@ -215,14 +197,14 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
         String username = jwtService.extractUsername(request.getToken());
 
         byte[] imageBytes = request.getImageData().toByteArray();
-        String contentType = request.getContentType(); // Pobieramy typ pliku z gRPC
+        String contentType = request.getContentType();
 
         java.util.Optional<com.qiu.entities.User> userOpt = userRepository.findByUsername(username);
 
         if (userOpt.isPresent()) {
             com.qiu.entities.User user = userOpt.get();
             user.setAvatar(imageBytes);
-            user.setAvatarContentType(contentType); // Zapis do encji
+            user.setAvatarContentType(contentType);
 
             userRepository.save(user);
 
@@ -256,7 +238,6 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
         if (userOpt.isPresent() && userOpt.get().getAvatar() != null) {
             imageBytes = userOpt.get().getAvatar();
 
-            // Pobieramy typ pliku z bazy
             if (userOpt.get().getAvatarContentType() != null) {
                 contentType = userOpt.get().getAvatarContentType();
             }
@@ -264,7 +245,7 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
 
         com.qiu.grpc.DownloadAvatarResponse response = com.qiu.grpc.DownloadAvatarResponse.newBuilder()
                 .setImageData(com.google.protobuf.ByteString.copyFrom(imageBytes))
-                .setContentType(contentType) // Zwracamy typ do Go
+                .setContentType(contentType)
                 .build();
 
         responseObserver.onNext(response);
@@ -274,14 +255,10 @@ public class RpgGrpcEndpoint extends com.qiu.grpc.RpgServiceGrpc.RpgServiceImplB
     @Override
     public void verifyUser(com.qiu.grpc.LoginRequest request, StreamObserver<com.qiu.grpc.LoginResponse> responseObserver) {
         try {
-            // 1. Weryfikacja użytkownika
             UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
 
-            // 2. Sprawdzenie hasła (zakładam, że passwordEncoder jest dostępny)
             if (userDetails != null && passwordEncoder.matches(request.getPassword(), userDetails.getPassword())) {
 
-                // Pobranie ID użytkownika (zakładam, że Twoja encja User posiada metodę getId())
-                // Musisz rzutować UserDetails na swoją klasę encji lub wyszukać ją w repozytorium
                 Optional<User> user = userRepository.findByUsername(request.getUsername());
 
                 final String jwtToken = jwtService.generateToken(userDetails);

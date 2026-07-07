@@ -53,7 +53,7 @@ public class AuthController {
         }
         final String jwtToken = jwtService.generateToken(userDetails);
         Cookie cookie = new Cookie("jwt_token", jwtToken);
-        cookie.setHttpOnly(true); // Zabezpiecza przed kradzieżą tokena przez złośliwe skrypty JS
+        cookie.setHttpOnly(true);
         cookie.setPath("/"); // Ciasteczko działa na całej stronie
         cookie.setMaxAge(24 * 60 * 60); // 24 godziny
         response.addCookie(cookie);

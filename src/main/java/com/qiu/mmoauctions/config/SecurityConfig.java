@@ -60,16 +60,6 @@ public class SecurityConfig {
         return manager;
     }
 
-//    @Autowired
-//    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
-//        auth.jdbcAuthentication().dataSource(dataSourceAuth)
-//                // Zakładamy, że w bazie authdb masz tabelę 'users' z kolumnami 'username' i 'password'
-//                // 'true' na końcu oznacza, że konto jest aktywne (enabled)
-//                .usersByUsernameQuery("SELECT username, password, true FROM users WHERE username=?")
-//                // Spring wymaga przypisania roli, dajemy domyślną 'USER'
-//                .authoritiesByUsernameQuery("SELECT username, 'USER' FROM users WHERE username=?")
-//                .passwordEncoder(passwordEncoder);
-//    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

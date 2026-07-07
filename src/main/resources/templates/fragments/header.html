@@ -66,7 +66,6 @@
     <div th:insert="~{fragments/notifications :: notifications}"></div>
 
     <script>
-        // --- ISTNIEJĄCY KOD ---
         const searchToggleBtn = document.getElementById('searchToggleBtn');
         const headerEl = document.querySelector('header');
         if (searchToggleBtn && headerEl) {
@@ -87,37 +86,30 @@
         }
 
         async function fetchWithToken(url, options = {}) {
-            // 1. Pobierz token od Springa
             const response = await fetch('/get-token');
             const data = await response.json();
 
-            // 2. Dodaj nagłówek dla Go
             options.headers = {
                 ...options.headers,
                 'Authorization': 'Bearer ' + data.token
             };
 
-            // 3. Wykonaj właściwe zapytanie do Go
             return fetch(url, options);
         }
 
-        // --- OBSŁUGA AVATARA (UPLOAD & DOWNLOAD PRZEZ API) ---
         const avatarIcon = document.getElementById('avatarIcon');
         const avatarMenu = document.getElementById('avatarMenu');
         const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
         const downloadAvatarBtn = document.getElementById('downloadAvatarBtn'); // Pobieramy przycisk pobierania
         const avatarFileInput = document.getElementById('avatarFileInput');
 
-        // Funkcja pomocnicza do pobierania tokenu JWT (dostosuj, jeśli trzymasz go w ciasteczku)
 
         if (avatarIcon && avatarMenu) {
-            // Otwieranie/zamykanie menu przy kliknięciu w ikonę
             avatarIcon.addEventListener('click', (e) => {
                 e.stopPropagation();
                 avatarMenu.style.display = avatarMenu.style.display === 'none' ? 'block' : 'none';
             });
 
-            // Zamykanie menu po kliknięciu gdziekolwiek w tło
             document.addEventListener('click', (e) => {
                 if (!avatarIcon.contains(e.target) && !avatarMenu.contains(e.target)) {
                     avatarMenu.style.display = 'none';
@@ -139,7 +131,6 @@
 
                     uploadAvatarBtn.innerText = "Wgrywanie...";
 
-                    // Zapytanie do API w Go (port 8080)
                     fetchWithToken('https://16.171.254.158:8080/api/avatar/upload', {
                         method: 'POST',
                         body: formData
@@ -160,13 +151,12 @@
             });
         }
 
-        // --- 2. DOWNLOAD (Pobieranie) ---
+
        if (downloadAvatarBtn) {
             downloadAvatarBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 avatarMenu.style.display = 'none';
 
-                // Zapytanie do API w Go o plik
                 fetchWithToken('https://16.171.254.158:8080/api/avatar/download', {
                     method: 'GET'
                 })
@@ -175,14 +165,11 @@
                         throw new Error('Błąd pobierania: ' + response.status);
                     }
 
-                    // 1. Odczytujemy typ pliku z nagłówka
                     const type = response.headers.get('Content-Type');
                     const extension = type ? type.split('/')[1] : 'png';
 
-                    // 2. Pobieramy zawartość jako blob
                     const blob = await response.blob();
 
-                    // Zwracamy obiekt z oboma parametrami do kolejnego .then()
                     return { blob, extension };
                 })
                 .then(({ blob, extension }) => {
@@ -190,7 +177,6 @@
                     const a = document.createElement('a');
                     a.href = url;
 
-                    // Ustawiamy dynamiczną nazwę pliku z odpowiednim rozszerzeniem
                     a.download = `moj_avatar.${extension}`;
 
                     document.body.appendChild(a);
